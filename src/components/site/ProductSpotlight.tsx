@@ -6,14 +6,14 @@ export function ProductSpotlight() {
     <section className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
       <div className="grid md:grid-cols-2 gap-12 items-center">
         <div className="relative order-2 md:order-1">
-          <img
-            src={spotlightImg}
-            alt="Obsidian Pro case display"
-            loading="lazy"
-            width={1080}
-            height={1500}
-            className="aspect-[3/4] w-full object-cover"
-          />
+            <ResponsiveImage
+              src={spotlightImg}
+              alt="Obsidian Pro case display"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              width={1080}
+              height={1500}
+              className="aspect-[3/4] w-full object-cover"
+            />
         </div>
 
         <div className="order-1 md:order-2 space-y-6">

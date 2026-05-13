@@ -16,6 +16,9 @@ dist-ssr
 .nitro
 *.local
 
+# LHCI temporary storage results
+.lighthouseci/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

@@ -1,14 +1,13 @@
 import lifestyleImg from "@/assets/lifestyle.jpg";
+import ResponsiveImage from "@/components/ui/responsive-image";
 
 export function Lifestyle() {
   return (
     <section className="relative h-96 overflow-hidden bg-card">
-      <img
+      <ResponsiveImage
         src={lifestyleImg}
         alt="Phone case in use"
-        loading="lazy"
-        width={1600}
-        height={1000}
+        sizes="100vw"
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />

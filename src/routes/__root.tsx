@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
+import { CartProvider } from "@/contexts/cart";
 import faviconUrl from "@/assets/favicon.svg?url";
 
 function NotFoundComponent() {
@@ -110,11 +111,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Navbar />
-      <main className="min-h-screen pt-16">
-        <Outlet />
-      </main>
-      <Footer />
+      <CartProvider>
+        <Navbar />
+        <main className="min-h-screen pt-16">
+          <Outlet />
+        </main>
+        <Footer />
+      </CartProvider>
     </QueryClientProvider>
   );
 }

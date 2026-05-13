@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { collections } from "@/lib/products";
+import ResponsiveImage from "@/components/ui/responsive-image";
 
 export function CollectionGrid() {
   return (
@@ -20,10 +21,10 @@ export function CollectionGrid() {
             to="/collections"
             className="group relative aspect-[4/5] overflow-hidden bg-card transition-all hover:shadow-lg"
           >
-            <img
+            <ResponsiveImage
               src={collection.image}
               alt={collection.name}
-              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 33vw"
               width={800}
               height={1000}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
