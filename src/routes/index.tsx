@@ -10,8 +10,8 @@ import { Testimonials } from "@/components/site/Testimonials";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Zyro — Premium Phone Cases" },
-      { name: "description", content: "Durable phone cases engineered for everyday use." },
+      { title: "Zyro — Premium Tech Cases" },
+      { name: "description", content: "Premium phone cases with tactile materials, MagSafe-ready detail, and studio-grade finish." },
     ],
   }),
   component: Index,

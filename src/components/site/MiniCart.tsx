@@ -80,35 +80,35 @@ export function MiniCart({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
         id="mini-cart"
         role="dialog"
         aria-modal="true"
-        className={`fixed right-6 top-16 z-50 w-80 bg-background border border-white/10 rounded-md shadow-lg p-4 transform transition-all duration-200 ease-out ${mounted ? "translate-x-0 opacity-100" : "translate-x-6 opacity-0"}`}
+        className={`fixed right-6 top-16 z-50 w-80 bg-background border border-white/5 rounded-sm shadow-2xl p-6 transform transition-all duration-200 ease-out ${mounted ? "translate-x-0 opacity-100" : "translate-x-6 opacity-0"}`}
       >
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold">Cart</h3>
-        <button ref={closeRef} onClick={onClose} aria-label="Close cart" className="text-foreground/60">✕</button>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-light text-lg tracking-tight">Cart</h3>
+        <button ref={closeRef} onClick={onClose} aria-label="Close cart" className="text-foreground/40 hover:text-foreground transition-colors">✕</button>
       </div>
 
       {state.items.length === 0 ? (
-        <div className="text-foreground/60">Your cart is empty.</div>
+        <div className="text-foreground/40 text-sm font-light">Your cart is empty.</div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {state.items.map((item) => (
-            <div key={`${item.productId}-${item.variantId ?? "default"}`} className="flex gap-3 items-center">
-              <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded-sm" />
+            <div key={`${item.productId}-${item.variantId ?? "default"}`} className="flex gap-3 items-start pb-4 border-b border-white/5">
+              <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded-sm flex-shrink-0" />
               <div className="flex-1 text-sm">
-                <div className="font-medium">{item.name}</div>
-                <div className="text-foreground/60">${item.price.toFixed(2)}</div>
-                <div className="mt-2 inline-flex items-center gap-2">
+                <div className="font-medium text-foreground/90">{item.name}</div>
+                <div className="text-foreground/50 text-xs mt-1">${item.price.toFixed(2)}</div>
+                <div className="mt-3 inline-flex items-center gap-2 border border-white/10 rounded-sm">
                   <button
                     onClick={() => updateQty(item.productId, item.variantId, Math.max(1, item.qty - 1))}
-                    className="w-7 h-7 flex items-center justify-center rounded border border-white/10"
+                    className="w-6 h-6 flex items-center justify-center text-foreground/60 hover:text-[#2B7FFF] transition-colors"
                     aria-label="Decrease quantity"
                   >
                     −
                   </button>
-                  <div className="w-8 text-center">{item.qty}</div>
+                  <div className="w-6 text-center text-xs">{item.qty}</div>
                   <button
                     onClick={() => updateQty(item.productId, item.variantId, item.qty + 1)}
-                    className="w-7 h-7 flex items-center justify-center rounded border border-white/10"
+                    className="w-6 h-6 flex items-center justify-center text-foreground/60 hover:text-[#2B7FFF] transition-colors"
                     aria-label="Increase quantity"
                   >
                     +
@@ -116,18 +116,18 @@ export function MiniCart({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                 </div>
               </div>
               <div className="flex flex-col items-end">
-                <button onClick={() => removeItem(item.productId, item.variantId)} className="text-foreground/60 text-xs">Remove</button>
+                <button onClick={() => removeItem(item.productId, item.variantId)} className="text-foreground/40 hover:text-foreground/80 text-xs font-light transition-colors">Remove</button>
               </div>
             </div>
           ))}
 
-          <div className="border-t border-white/10 pt-3 flex justify-between items-center">
-            <div className="font-semibold">Total</div>
-            <div className="font-semibold">${total.toFixed(2)}</div>
+          <div className="border-t border-white/5 pt-4 flex justify-between items-center">
+            <div className="font-light text-foreground/80">Total</div>
+            <div className="font-medium text-[#2B7FFF]">${total.toFixed(2)}</div>
           </div>
 
-          <div className="mt-3 space-y-2">
-            <Link to="/cart" className="btn-primary w-full inline-block">View Cart</Link>
+          <div className="mt-4 space-y-3">
+            <Link to="/cart" className="btn-primary w-full inline-block text-center">View Cart</Link>
             <button onClick={() => { clear(); onClose(); }} className="btn-secondary w-full">Clear</button>
           </div>
         </div>

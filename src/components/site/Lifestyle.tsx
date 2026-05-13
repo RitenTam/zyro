@@ -10,15 +10,15 @@ export function Lifestyle() {
         sizes="100vw"
         className="absolute inset-0 w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
 
       <div className="relative h-full max-w-7xl mx-auto px-6 flex items-end pb-12">
         <div className="max-w-md">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-            Designed for your lifestyle
+          <h2 className="text-4xl sm:text-5xl font-light tracking-tighter mb-4">
+            Designed for Your Lifestyle
           </h2>
-          <p className="text-foreground/70">
-            Built tough enough for daily use, polished enough for any setting.
+          <p className="text-foreground/60 font-light text-lg">
+            Built tough for daily use, refined for any setting.
           </p>
         </div>
       </div>
