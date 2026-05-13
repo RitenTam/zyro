@@ -10,17 +10,8 @@ import { Testimonials } from "@/components/site/Testimonials";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Aether — Architectural protection for the modern lifestyle" },
-      {
-        name: "description",
-        content:
-          "Premium silicone, woven, and MagSafe phone cases. Engineered to aerospace tolerance. Designed in San Francisco.",
-      },
-      { property: "og:title", content: "Aether — Premium tech accessories" },
-      {
-        property: "og:description",
-        content: "Engineered for the modern nomad. Liquid silicone meets architectural precision.",
-      },
+      { title: "Zyro — Premium Phone Cases" },
+      { name: "description", content: "Durable phone cases engineered for everyday use." },
     ],
   }),
   component: Index,

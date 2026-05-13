@@ -6,18 +6,22 @@ import obsidianImg from "@/assets/spotlight-obsidian.jpg";
 export type ProductColor = { name: string; hex: string };
 export type ProductMaterial = "Silicone" | "Woven" | "MagSafe" | "Protective";
 
-export type Product = {
+export interface Specification {
+  name: string;
+  value: string;
+}
+
+export interface Product {
   id: string;
   name: string;
   collection: string;
   material: ProductMaterial;
   price: number;
-  tagline: string;
   description: string;
   image: string;
   colors: ProductColor[];
-  features: { label: string; detail: string }[];
-};
+  specs: Specification[];
+}
 
 export const products: Product[] = [
   {
@@ -26,9 +30,8 @@ export const products: Product[] = [
     collection: "Silicone Series",
     material: "Silicone",
     price: 55,
-    tagline: "Liquid silicone, refined.",
     description:
-      "A hydrophobic, soft-touch chassis molded from medical-grade liquid silicone. Engineered for the modern nomad — featherweight, fingerprint-resistant, and architecturally precise.",
+      "Liquid silicone base with soft-touch finish. Drop tested to 10 feet. Oil resistant, fingerprint free.",
     image: siliconeImg,
     colors: [
       { name: "Onyx", hex: "#0a0a0a" },
@@ -36,11 +39,11 @@ export const products: Product[] = [
       { name: "Sand", hex: "#b89c7c" },
       { name: "Slate", hex: "#7a8088" },
     ],
-    features: [
-      { label: "10ft Drop Proof", detail: "Proprietary AeroShock lining absorbs 95% of impact." },
-      { label: "Soft-Touch Finish", detail: "Oil and fingerprint resistant micro-coating." },
-      { label: "MagSafe Aligned", detail: "N52 magnet array for instant snap." },
-      { label: "FSC Packaging", detail: "Compostable technical packaging." },
+    specs: [
+      { name: "Drop Protection", value: "10 feet" },
+      { name: "Finish", value: "Soft-touch matte" },
+      { name: "MagSafe", value: "Compatible" },
+      { name: "Warranty", value: "1 year" },
     ],
   },
   {
@@ -49,42 +52,40 @@ export const products: Product[] = [
     collection: "Textile Series",
     material: "Woven",
     price: 75,
-    tagline: "Tactile precision grip.",
     description:
-      "A precision-milled ballistic weave bonded to an aerospace polymer chassis. Engineered to age with character.",
+      "Ballistic nylon woven exterior on aerospace polymer. Tactile grip, designed to age with character.",
     image: wovenImg,
     colors: [
       { name: "Charcoal", hex: "#2a2a2c" },
       { name: "Graphite", hex: "#3d3d40" },
       { name: "Ivory", hex: "#dcd6c8" },
     ],
-    features: [
-      { label: "Mil-Spec Rated", detail: "MIL-STD-810G drop-tested at 12ft." },
-      { label: "Tactile Weave", detail: "1.2mm grain provides confident grip." },
-      { label: "MagSafe Aligned", detail: "Optimized magnet ring under textile." },
-      { label: "Lifetime Warranty", detail: "Repaired or replaced, indefinitely." },
+    specs: [
+      { name: "Drop Protection", value: "12 feet" },
+      { name: "Material", value: "Ballistic nylon" },
+      { name: "MagSafe", value: "Compatible" },
+      { name: "Warranty", value: "Lifetime repair" },
     ],
   },
   {
     id: "magsafe-ultra-frost",
     name: "MagSafe Ultra",
-    collection: "Magnetic Ecosystem",
+    collection: "Magnetic Series",
     material: "MagSafe",
     price: 65,
-    tagline: "Snap with conviction.",
     description:
-      "Frosted polymer with an integrated N52 neodymium array. The strongest snap in the ecosystem — engineered for wireless power and accessory pairing.",
+      "Frosted polymer with N52 magnet array. Optimized for wireless charging and magnetic accessories.",
     image: magsafeImg,
     colors: [
       { name: "Frost", hex: "#cdd5dc" },
       { name: "Onyx", hex: "#0a0a0a" },
       { name: "Storm", hex: "#525a66" },
     ],
-    features: [
-      { label: "N52 Magnet Array", detail: "Strongest magnetic alignment in class." },
-      { label: "Frosted Polymer", detail: "Translucent finish that won't yellow." },
-      { label: "15W Wireless", detail: "Optimized for full-speed MagSafe charging." },
-      { label: "Reinforced Edge", detail: "Raised camera bezel and screen lip." },
+    specs: [
+      { name: "Drop Protection", value: "10 feet" },
+      { name: "Magnet Strength", value: "N52 grade" },
+      { name: "Charging", value: "15W wireless" },
+      { name: "Warranty", value: "1 year" },
     ],
   },
   {
@@ -93,9 +94,8 @@ export const products: Product[] = [
     collection: "Protective Series",
     material: "Protective",
     price: 95,
-    tagline: "Engineered for impact.",
     description:
-      "Aerospace-grade polymer with a micro-etched finish. Built to survive — designed to disappear.",
+      "Aerospace polymer with reinforced corners. 15-foot drop tested. Built for daily impact.",
     image: obsidianImg,
     colors: [
       { name: "Midnight", hex: "#0a0a0a" },
@@ -103,11 +103,11 @@ export const products: Product[] = [
       { name: "Sand", hex: "#b89c7c" },
       { name: "Storm", hex: "#525a66" },
     ],
-    features: [
-      { label: "15ft Drop Proof", detail: "Reinforced corner ImpactX columns." },
-      { label: "Micro-Etched Finish", detail: "Resists scratches and patina with use." },
-      { label: "MagSafe Aligned", detail: "N52 magnet array, fully concealed." },
-      { label: "Lifetime Warranty", detail: "Repaired or replaced, indefinitely." },
+    specs: [
+      { name: "Drop Protection", value: "15 feet" },
+      { name: "Material", value: "Aerospace polymer" },
+      { name: "MagSafe", value: "Compatible" },
+      { name: "Warranty", value: "Lifetime repair" },
     ],
   },
 ];
@@ -116,23 +116,27 @@ export const collections = [
   {
     slug: "silicone",
     name: "Silicone",
-    eyebrow: "Tactile Precision",
+    description: "Soft-touch protection",
     image: siliconeImg,
   },
   {
     slug: "woven",
     name: "Woven",
-    eyebrow: "Textile Series",
+    description: "Tactile textile",
     image: wovenImg,
   },
   {
     slug: "magsafe",
-    name: "MagSafe",
-    eyebrow: "Power Integrated",
+    name: "Magnetic",
+    description: "Wireless charging",
     image: magsafeImg,
   },
 ];
 
 export function getProduct(id: string): Product | undefined {
   return products.find((p) => p.id === id);
+}
+
+export function getRelatedProducts(productId: string, limit: number = 3): Product[] {
+  return products.filter((p) => p.id !== productId).slice(0, limit);
 }

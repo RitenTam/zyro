@@ -3,14 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "Studio — Aether" },
-      {
-        name: "description",
-        content:
-          "Aether is a small design studio in San Francisco engineering quietly essential tech accessories.",
-      },
-      { property: "og:title", content: "Studio — Aether" },
-      { property: "og:description", content: "Quietly essential tech accessories, designed in San Francisco." },
+      { title: "About — Zyro" },
+      { name: "description", content: "Learn about Zyro and how we build phone cases." },
     ],
   }),
   component: AboutPage,
@@ -18,37 +12,34 @@ export const Route = createFileRoute("/about")({
 
 function AboutPage() {
   return (
-    <>
-      <header className="pt-40 pb-20 px-6 sm:px-8 max-w-5xl mx-auto">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/40 mb-6 animate-rise">
-          The Studio
-        </p>
-        <h1 className="text-5xl sm:text-7xl font-bold tracking-tighter text-balance animate-rise delay-100">
-          A small studio,
-          <br />
-          obsessed with the millimeter.
-        </h1>
-      </header>
+    <div className="pt-20 pb-32 max-w-3xl mx-auto px-6">
+      <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-12">
+        About Zyro
+      </h1>
 
-      <section className="px-6 sm:px-8 max-w-3xl mx-auto pb-32 space-y-8 text-foreground/70 leading-relaxed text-pretty">
+      <div className="space-y-6 text-foreground/70 leading-relaxed">
         <p>
-          Aether is a design studio based in San Francisco. We make a small catalog of tech accessories engineered to aerospace tolerance — built to outlast the devices they carry.
+          We make phone cases. They're built to take impacts, resist daily wear, and look clean doing it. No fuss, no unnecessary features.
         </p>
+
         <p>
-          We believe the most sustainable product is the one you never need to replace. Every artifact is designed to age with character, repaired indefinitely, and packaged in compostable materials.
+          Every case is drop tested, uses quality materials, and comes with real support if something happens. We stand behind our work.
         </p>
+
         <p>
-          We're starting with cases. Next: AirPods sleeves, watch straps, tech organizers, and quiet desk artifacts. The system is built for what comes next.
+          We started because most phone cases feel like an afterthought. We wanted to build something better — protection that doesn't feel bulky, design that's intentional, and a company that actually takes care of customers.
         </p>
+
+        <p>
+          We're small. We make what we believe in. If you have questions or feedback, we'd like to hear it.
+        </p>
+
         <div className="pt-8">
-          <Link
-            to="/collections"
-            className="inline-block px-8 py-4 bg-foreground text-background text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-foreground/90 transition-all"
-          >
-            Browse the Catalog
+          <Link to="/collections" className="btn-primary inline-block">
+            Shop Cases
           </Link>
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }

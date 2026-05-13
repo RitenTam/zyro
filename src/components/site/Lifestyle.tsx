@@ -2,29 +2,24 @@ import lifestyleImg from "@/assets/lifestyle.jpg";
 
 export function Lifestyle() {
   return (
-    <section className="relative h-[80vh] min-h-[520px] overflow-hidden">
+    <section className="relative h-96 overflow-hidden bg-card">
       <img
         src={lifestyleImg}
-        alt="Hand holding phone with premium matte case in cinematic golden light"
+        alt="Phone case in use"
         loading="lazy"
         width={1600}
         height={1000}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-onyx via-onyx/40 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-onyx/60 via-transparent to-transparent" />
-      <div className="relative z-10 h-full max-w-7xl mx-auto px-6 sm:px-8 flex items-end pb-24">
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
+
+      <div className="relative h-full max-w-7xl mx-auto px-6 flex items-end pb-12">
         <div className="max-w-md">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/50 mb-6">
-            04 / In Use
-          </p>
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter leading-[1.05] text-balance">
-            Built for the
-            <br />
-            quiet hours.
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+            Designed for your lifestyle
           </h2>
-          <p className="mt-6 text-sm text-foreground/60 leading-relaxed text-pretty">
-            A daily companion designed to disappear into the rituals of modern life.
+          <p className="text-foreground/70">
+            Built tough enough for daily use, polished enough for any setting.
           </p>
         </div>
       </div>
