@@ -17,11 +17,8 @@ export function ProductSpotlight() {
         </div>
         <div className="order-1 md:order-2 space-y-10">
           <div className="space-y-4">
-            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-foreground/30">
-              02 / New Arrival
-            </span>
             <h2 className="text-5xl sm:text-6xl font-bold tracking-tighter text-balance">
-              Obsidian Series.
+              New Arrival.
             </h2>
             <p className="text-foreground/60 leading-relaxed text-sm max-w-md text-pretty">
               Crafted from aerospace-grade polymers with a micro-etched finish. Designed to age with character while providing 15ft drop protection.

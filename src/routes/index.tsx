@@ -5,7 +5,6 @@ import { ProductSpotlight } from "@/components/site/ProductSpotlight";
 import { BestSellers } from "@/components/site/BestSellers";
 import { Lifestyle } from "@/components/site/Lifestyle";
 import { BrandValues } from "@/components/site/BrandValues";
-import { Testimonials } from "@/components/site/Testimonials";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,7 +34,6 @@ function Index() {
       <BestSellers />
       <Lifestyle />
       <BrandValues />
-      <Testimonials />
     </>
   );
 }

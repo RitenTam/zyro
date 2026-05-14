@@ -15,13 +15,8 @@ export function Lifestyle() {
       <div className="absolute inset-0 bg-gradient-to-t from-onyx/60 via-transparent to-transparent" />
       <div className="relative z-10 h-full max-w-7xl mx-auto px-6 sm:px-8 flex items-end pb-24">
         <div className="max-w-md">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/50 mb-6">
-            04 / In Use
-          </p>
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter leading-[1.05] text-balance">
-            Built for the
-            <br />
-            quiet hours.
+            In Use.
           </h2>
           <p className="mt-6 text-sm text-foreground/60 leading-relaxed text-pretty">
             A daily companion designed to disappear into the rituals of modern life.

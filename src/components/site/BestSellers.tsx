@@ -6,11 +6,8 @@ export function BestSellers() {
     <section className="py-32 px-6 sm:px-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-16">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/40 mb-4">
-            03 / Best Sellers
-          </p>
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter max-w-md text-balance">
-            Quietly essential.
+            Best Sellers.
           </h2>
         </div>
       </div>
