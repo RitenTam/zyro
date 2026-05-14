@@ -1,24 +1,30 @@
 import lifestyleImg from "@/assets/lifestyle.jpg";
-import ResponsiveImage from "@/components/ui/responsive-image";
 
 export function Lifestyle() {
   return (
-    <section className="relative h-96 overflow-hidden bg-card">
-      <ResponsiveImage
+    <section className="relative h-[80vh] min-h-[520px] overflow-hidden">
+      <img
         src={lifestyleImg}
-        alt="Phone case in use"
-        sizes="100vw"
+        alt="Hand holding phone with premium matte case in cinematic golden light"
+        loading="lazy"
+        width={1600}
+        height={1000}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
-
-      <div className="relative h-full max-w-7xl mx-auto px-6 flex items-end pb-12">
+      <div className="absolute inset-0 bg-gradient-to-r from-onyx via-onyx/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-onyx/60 via-transparent to-transparent" />
+      <div className="relative z-10 h-full max-w-7xl mx-auto px-6 sm:px-8 flex items-end pb-24">
         <div className="max-w-md">
-          <h2 className="text-4xl sm:text-5xl font-light tracking-tighter mb-4">
-            Designed for Your Lifestyle
+          <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/50 mb-6">
+            04 / In Use
+          </p>
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter leading-[1.05] text-balance">
+            Built for the
+            <br />
+            quiet hours.
           </h2>
-          <p className="text-foreground/60 font-light text-lg">
-            Built tough for daily use, refined for any setting.
+          <p className="mt-6 text-sm text-foreground/60 leading-relaxed text-pretty">
+            A daily companion designed to disappear into the rituals of modern life.
           </p>
         </div>
       </div>

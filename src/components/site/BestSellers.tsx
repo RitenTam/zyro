@@ -1,71 +1,66 @@
 import { Link } from "@tanstack/react-router";
 import { products } from "@/lib/products";
-import ResponsiveImage from "@/components/ui/responsive-image";
 
 export function BestSellers() {
   return (
-    <section className="py-32 px-6 max-w-7xl mx-auto">
-      <div className="mb-16 space-y-4">
-        <h2 className="text-5xl sm:text-6xl font-light tracking-tighter">
-          Popular Models
-        </h2>
-        <p className="text-foreground/50 max-w-md text-lg font-light">
-          Our most trusted and reviewed cases
-        </p>
-        <div className="h-0.5 w-16 bg-[#2B7FFF]" />
+    <section className="py-32 px-6 sm:px-8 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-16">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/40 mb-4">
+            03 / Best Sellers
+          </p>
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter max-w-md text-balance">
+            Quietly essential.
+          </h2>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {products.map((product) => {
-          const totalAvailable = product.variants?.reduce((s, v) => s + (v.available ?? 0), 0) ?? 0;
-          const isLow = totalAvailable > 0 && totalAvailable < 30;
-          const isOut = totalAvailable === 0;
-
-          return (
-            <Link
-              key={product.id}
-              to="/products/$productId"
-              params={{ productId: product.id }}
-              className="group block"
-            >
-                <div className="relative aspect-[3/4] bg-card overflow-hidden mb-6 transition-all duration-300 group-hover:shadow-2xl border border-white/5 group-hover:border-[#2B7FFF]/30">
-                <ResponsiveImage
-                  src={product.image}
-                  alt={product.name}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  width={600}
-                  height={800}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {products.map((p) => (
+          <Link
+            to="/products/$productId"
+            params={{ productId: p.id }}
+            key={p.id}
+            className="group block"
+          >
+            <div className="relative aspect-[4/5] bg-surface overflow-hidden">
+              <img
+                src={p.image}
+                alt={p.name}
+                loading="lazy"
+                width={800}
+                height={1000}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                }}
+                className="absolute bottom-4 left-4 right-4 py-3 bg-foreground/95 text-background text-[10px] font-bold uppercase tracking-[0.3em] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 backdrop-blur-md"
+              >
+                Quick Add
+              </button>
+            </div>
+            <div className="pt-5 flex justify-between items-start gap-4">
+              <div>
+                <h3 className="text-sm font-semibold tracking-tight">{p.name}</h3>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-foreground/40 mt-1">
+                  {p.collection}
+                </p>
+              </div>
+              <div className="text-sm font-medium tabular-nums">${p.price}</div>
+            </div>
+            <div className="flex gap-1.5 mt-3">
+              {p.colors.slice(0, 4).map((c) => (
+                <span
+                  key={c.name}
+                  className="size-3 rounded-full border border-white/15"
+                  style={{ background: c.hex }}
                 />
-              </div>
-              <div className="space-y-3">
-                  <h3 className="font-light text-lg tracking-tight group-hover:text-[#2B7FFF] transition-colors duration-200">{product.name}</h3>
-                  <p className="text-sm text-foreground/40 font-light">{product.collection}</p>
-                <div className="flex justify-between items-start pt-2">
-                    <span className="text-base font-medium text-[#2B7FFF]">${product.price}</span>
-                  <div className="flex items-center gap-3">
-                    {isOut && (
-                        <span className="text-xs bg-red-600/20 text-red-400 px-2.5 py-1 rounded-sm font-medium">Out of stock</span>
-                    )}
-                    {isLow && (
-                        <span className="text-xs bg-amber-400/20 text-amber-300 px-2.5 py-1 rounded-sm font-medium">Low stock</span>
-                    )}
-                    <div className="flex gap-2">
-                      {product.colors.slice(0, 3).map((c) => (
-                        <span
-                          key={c.name}
-                            className="w-2.5 h-2.5 rounded-full border border-white/10 transition-all hover:border-white/30"
-                          style={{ backgroundColor: c.hex }}
-                          title={c.name}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+              ))}
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );
