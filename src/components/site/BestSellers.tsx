@@ -4,18 +4,18 @@ import ResponsiveImage from "@/components/ui/responsive-image";
 
 export function BestSellers() {
   return (
-    <section className="mx-auto max-w-7xl px-8 py-40 lg:px-12 xl:px-16">
-      <div className="mb-20 max-w-2xl space-y-5">
-        <h2 className="text-4xl font-light tracking-tighter sm:text-5xl lg:text-[3.6rem]">
+    <section className="py-32 px-6 max-w-7xl mx-auto">
+      <div className="mb-16 space-y-4">
+        <h2 className="text-5xl sm:text-6xl font-light tracking-tighter">
           Popular Models
         </h2>
-        <p className="max-w-lg text-lg font-light leading-8 text-foreground/48">
+        <p className="text-foreground/50 max-w-md text-lg font-light">
           Our most trusted and reviewed cases
         </p>
-        <div className="h-px w-20 bg-white/20" />
+        <div className="h-0.5 w-16 bg-[#2B7FFF]" />
       </div>
 
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 xl:gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {products.map((product) => {
           const totalAvailable = product.variants?.reduce((s, v) => s + (v.available ?? 0), 0) ?? 0;
           const isLow = totalAvailable > 0 && totalAvailable < 30;
@@ -28,33 +28,33 @@ export function BestSellers() {
               params={{ productId: product.id }}
               className="group block"
             >
-                <div className="relative mb-6 aspect-[3/4] overflow-hidden border border-white/6 bg-card/30 transition-all duration-500 group-hover:border-white/12 group-hover:shadow-[0_26px_72px_rgba(0,0,0,0.28)]">
+                <div className="relative aspect-[3/4] bg-card overflow-hidden mb-6 transition-all duration-300 group-hover:shadow-2xl border border-white/5 group-hover:border-[#2B7FFF]/30">
                 <ResponsiveImage
                   src={product.image}
                   alt={product.name}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   width={600}
                   height={800}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
               <div className="space-y-3">
-                  <h3 className="text-lg font-light tracking-tight transition-colors duration-200 group-hover:text-[#8AB7FF]">{product.name}</h3>
-                  <p className="text-sm font-light text-foreground/42">{product.collection}</p>
+                  <h3 className="font-light text-lg tracking-tight group-hover:text-[#2B7FFF] transition-colors duration-200">{product.name}</h3>
+                  <p className="text-sm text-foreground/40 font-light">{product.collection}</p>
                 <div className="flex justify-between items-start pt-2">
-                    <span className="text-base font-medium text-[#8AB7FF]">${product.price}</span>
+                    <span className="text-base font-medium text-[#2B7FFF]">${product.price}</span>
                   <div className="flex items-center gap-3">
                     {isOut && (
-                        <span className="rounded-sm bg-red-600/20 px-2.5 py-1 text-xs font-medium text-red-400">Out of stock</span>
+                        <span className="text-xs bg-red-600/20 text-red-400 px-2.5 py-1 rounded-sm font-medium">Out of stock</span>
                     )}
                     {isLow && (
-                        <span className="rounded-sm bg-amber-400/20 px-2.5 py-1 text-xs font-medium text-amber-300">Low stock</span>
+                        <span className="text-xs bg-amber-400/20 text-amber-300 px-2.5 py-1 rounded-sm font-medium">Low stock</span>
                     )}
                     <div className="flex gap-2">
                       {product.colors.slice(0, 3).map((c) => (
                         <span
                           key={c.name}
-                            className="h-2.5 w-2.5 rounded-full border border-white/10 transition-all hover:border-white/30"
+                            className="w-2.5 h-2.5 rounded-full border border-white/10 transition-all hover:border-white/30"
                           style={{ backgroundColor: c.hex }}
                           title={c.name}
                         />

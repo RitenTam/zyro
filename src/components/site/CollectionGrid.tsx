@@ -4,23 +4,23 @@ import ResponsiveImage from "@/components/ui/responsive-image";
 
 export function CollectionGrid() {
   return (
-    <section className="mx-auto max-w-7xl px-8 py-40 lg:px-12 xl:px-16">
-      <div className="mb-24 max-w-2xl space-y-5">
-        <h2 className="text-4xl font-light tracking-tighter sm:text-5xl lg:text-[3.6rem]">
+    <section className="py-32 px-6 max-w-7xl mx-auto">
+      <div className="mb-20 space-y-4">
+        <h2 className="text-5xl sm:text-6xl font-light tracking-tighter">
           Shop by Material
         </h2>
-        <p className="max-w-lg text-lg font-light leading-8 text-foreground/48">
+        <p className="text-foreground/50 max-w-md text-lg font-light">
           Each collection engineered for different needs and preferences.
         </p>
-        <div className="h-px w-20 bg-white/20" />
+        <div className="h-0.5 w-16 bg-[#2B7FFF]" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 xl:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {collections.map((collection) => (
           <Link
             key={collection.slug}
             to="/collections"
-            className="group relative aspect-[4/5] overflow-hidden border border-white/5 bg-card/35 transition-all duration-500 hover:border-white/12 hover:shadow-[0_30px_80px_rgba(0,0,0,0.34)]"
+            className="group relative aspect-[4/5] overflow-hidden bg-card transition-all duration-300 hover:shadow-2xl border border-white/5 hover:border-[#2B7FFF]/30"
           >
             <ResponsiveImage
               src={collection.image}
@@ -28,12 +28,12 @@ export function CollectionGrid() {
               sizes="(max-width: 768px) 100vw, 33vw"
               width={800}
               height={1000}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/58 to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-end p-8 lg:p-9">
-              <h3 className="mb-2 text-2xl font-light tracking-tight text-foreground/92 transition-colors duration-200 group-hover:text-[#8AB7FF]">{collection.name}</h3>
-              <p className="max-w-xs text-sm font-light leading-6 text-foreground/50">{collection.description}</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+            <div className="absolute inset-0 flex flex-col justify-end p-8">
+              <h3 className="text-2xl font-light tracking-tight mb-2 group-hover:text-[#2B7FFF] transition-colors duration-200">{collection.name}</h3>
+              <p className="text-sm text-foreground/50 font-light">{collection.description}</p>
             </div>
           </Link>
         ))}
