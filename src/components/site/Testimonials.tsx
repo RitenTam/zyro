@@ -15,18 +15,18 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="py-32 px-6 max-w-7xl mx-auto border-t border-white/5">
-      <h2 className="text-5xl sm:text-6xl font-light tracking-tighter mb-16">
+    <section className="mx-auto max-w-7xl border-t border-white/5 px-8 py-40 lg:px-12 xl:px-16">
+      <h2 className="mb-20 text-4xl font-light tracking-tighter sm:text-5xl lg:text-[3.6rem]">
         What People Say
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 gap-12 md:grid-cols-3 xl:gap-16">
         {testimonials.map((t, i) => (
-          <figure key={i} className="space-y-6 border-l border-[#2B7FFF]/30 pl-6 transition-all hover:border-[#2B7FFF] duration-200">
-            <blockquote className="text-lg leading-relaxed text-foreground/80 font-light">
+          <figure key={i} className="space-y-6 border-l border-white/10 pl-6 transition-all duration-200 hover:border-white/20">
+            <blockquote className="text-lg font-light leading-8 text-foreground/76">
               "{t.quote}"
             </blockquote>
-            <figcaption className="text-sm text-foreground/50 font-light">
+            <figcaption className="text-sm font-light text-foreground/46">
               — {t.author}
             </figcaption>
           </figure>
