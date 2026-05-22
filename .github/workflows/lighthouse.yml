@@ -14,9 +14,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 18.20.0
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include=dev
       - name: Build
         run: npm run build
       - name: Start static server
