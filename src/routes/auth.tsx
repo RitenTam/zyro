@@ -5,11 +5,11 @@ import { AuthShell } from "@/components/site/auth/AuthShell";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>) => ({
-    mode: search.mode === "signup" || search.mode === "forgot" ? search.mode : "signin",
+    mode: search.mode === "signup" ? "signup" : "signin",
     next: typeof search.next === "string" ? search.next : "/account",
   }),
   head: () => ({
-    meta: [{ title: "Account access — Zyro" }],
+    meta: [{ title: "Sign in — Zyro" }],
   }),
   component: AuthPage,
 });
