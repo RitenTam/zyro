@@ -11,7 +11,9 @@ import {
 import appCss from "../styles.css?url";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
+import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/contexts/cart";
+import { AuthProvider } from "@/contexts/auth";
 import faviconUrl from "@/assets/favicon.svg?url";
 
 function NotFoundComponent() {
@@ -111,13 +113,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Navbar />
-        <main className="min-h-screen pt-16">
-          <Outlet />
-        </main>
-        <Footer />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Navbar />
+          <Toaster position="top-right" richColors closeButton theme="dark" />
+          <main className="min-h-screen pt-16">
+            <Outlet />
+          </main>
+          <Footer />
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

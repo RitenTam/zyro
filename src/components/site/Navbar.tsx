@@ -1,13 +1,29 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { LoaderCircle, LogOut, UserCircle2 } from "lucide-react";
 import MiniCart from "./MiniCart";
 import { useCart } from "@/contexts/cart";
-import ResponsiveImage from "@/components/ui/responsive-image";
+import { useAuth } from "@/contexts/auth";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { state } = useCart();
+  const { ready, user, signOut } = useAuth();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
   const count = state.items.reduce((s, i) => s + i.qty, 0);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    const result = await signOut();
+    setSigningOut(false);
+
+    if (!result.error) {
+      router.navigate({ to: "/" });
+    }
+  }
+
+  const authHref = `/auth?next=${encodeURIComponent("/account")}`;
 
   return (
     <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/95 backdrop-blur-md">
@@ -33,10 +49,38 @@ export function Navbar() {
           </Link>
         </div>
 
-        <div className="flex gap-8 text-sm items-center">
+        <div className="flex items-center gap-4 text-sm">
           <button className="hidden sm:inline text-foreground/60 hover:text-foreground transition-colors duration-200">
             Search
           </button>
+          <div className="hidden sm:flex items-center gap-3">
+            {ready && user ? (
+              <>
+                <Link
+                  to="/account"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-foreground/75 transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.08]"
+                >
+                  <UserCircle2 className="size-4 text-[#7DB1FF]" />
+                  Account
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-foreground/50 transition-colors duration-200 hover:border-white/20 hover:text-foreground disabled:opacity-60"
+                >
+                  {signingOut ? <LoaderCircle className="size-4 animate-spin" /> : <LogOut className="size-4" />}
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <a
+                href={authHref}
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-foreground/75 transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.08]"
+              >
+                Sign in
+              </a>
+            )}
+          </div>
           <button
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
