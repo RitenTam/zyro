@@ -2,6 +2,14 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { LoaderCircle, LogOut, UserCircle2 } from "lucide-react";
 import MiniCart from "./MiniCart";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCart } from "@/contexts/cart";
 import { useAuth } from "@/contexts/auth";
 
@@ -12,6 +20,8 @@ export function Navbar() {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const count = state.items.reduce((s, i) => s + i.qty, 0);
+  const displayName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? "Customer";
+  const initials = getInitials(displayName, user?.email ?? "");
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -68,23 +78,48 @@ export function Navbar() {
           </button>
           <div className="hidden sm:flex items-center gap-3">
             {ready && user ? (
-              <>
-                <Link
-                  to="/account"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-foreground/75 transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.08]"
-                >
-                  <UserCircle2 className="size-4 text-[#7DB1FF]" />
-                  Account
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  disabled={signingOut}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-foreground/50 transition-colors duration-200 hover:border-white/20 hover:text-foreground disabled:opacity-60"
-                >
-                  {signingOut ? <LoaderCircle className="size-4 animate-spin" /> : <LogOut className="size-4" />}
-                  Sign out
-                </button>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="rounded-full outline-none ring-offset-background transition-transform duration-200 hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    aria-label="Open account menu"
+                  >
+                    <Avatar className="h-10 w-10 border border-white/10 bg-white/[0.04] shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+                      <AvatarFallback className="bg-gradient-to-br from-white/18 to-white/6 text-[11px] font-semibold tracking-[0.22em] text-white/90">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-white/10 bg-[#0d0d0d] p-2 text-foreground shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
+                  <div className="px-3 py-2">
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-foreground/35">Signed in as</div>
+                    <div className="mt-1 truncate text-sm text-foreground/80">{displayName}</div>
+                  </div>
+                  <DropdownMenuSeparator className="my-1 bg-white/8" />
+                  <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 text-sm text-foreground/75 focus:bg-white/[0.06] focus:text-foreground">
+                    <a href="/account#profile">Profile</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 text-sm text-foreground/75 focus:bg-white/[0.06] focus:text-foreground">
+                    <a href="/account#addresses">Addresses</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 text-sm text-foreground/75 focus:bg-white/[0.06] focus:text-foreground">
+                    <a href="/account#orders">Orders</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-1 bg-white/8" />
+                  <DropdownMenuItem
+                    className="rounded-xl px-3 py-2.5 text-sm text-foreground/75 focus:bg-white/[0.06] focus:text-foreground"
+                    onSelect={(event) => {
+                      event.preventDefault();
+                      void handleSignOut();
+                    }}
+                  >
+                    <LogOut className="size-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <a
                 href={authHref}
@@ -100,4 +135,27 @@ export function Navbar() {
       <MiniCart isOpen={open} onClose={() => setOpen(false)} />
     </nav>
   );
+}
+
+function getInitials(name: string, email: string) {
+  const fromName = name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("");
+
+  if (fromName) {
+    return fromName.toUpperCase();
+  }
+
+  return email
+    .split("@")[0]
+    .split(/[._-]/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }

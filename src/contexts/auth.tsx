@@ -18,6 +18,7 @@ type AuthContextValue = {
   ready: boolean;
   session: Session | null;
   user: User | null;
+  updateProfile: (profile: { fullName?: string; email?: string }) => Promise<AuthActionResult>;
   signIn: (email: string, password: string) => Promise<AuthActionResult>;
   signUp: (email: string, password: string, next?: string | null) => Promise<AuthActionResult>;
   signOut: () => Promise<AuthActionResult>;
@@ -113,6 +114,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ready: !loading,
       session,
       user: session?.user ?? null,
+      updateProfile: (profile) =>
+        withClient(async (supabaseClient) => {
+          const updates: { email?: string; data?: { full_name?: string } } = {};
+
+          if (typeof profile.email === "string" && profile.email.trim()) {
+            updates.email = profile.email.trim().toLowerCase();
+          }
+
+          if (typeof profile.fullName === "string") {
+            updates.data = { full_name: profile.fullName.trim() };
+          }
+
+          if (!updates.email && !updates.data) {
+            return {};
+          }
+
+          const { error } = await supabaseClient.auth.updateUser(updates);
+
+          if (error) {
+            return { error: normalizeAuthError(error) };
+          }
+
+          return {};
+        }),
       signIn: (email, password) =>
         withClient(async (supabaseClient) => {
           const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
