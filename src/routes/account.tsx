@@ -257,9 +257,6 @@ function AccountContent() {
               Private account
             </div>
             <div className="mt-3 text-lg font-medium text-foreground/90">{email}</div>
-            <p className="mt-2 text-sm leading-6 text-foreground/55">
-              Secure, minimal, and ready for profile edits, shipping management, and future receipts.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-3 lg:justify-end">
