@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "audit:assets": "node ./scripts/asset-audit.js",
-    "ci:lhci": "npx lhci autorun --collect.url=http://localhost:8080 --upload.target=temporary-public-storage",
+    "ci:lhci": "lhci autorun --collect.url=http://127.0.0.1:8080 --collect.startServerCommand=\"npm run preview -- --host 127.0.0.1 --port 8080 --strictPort\" --upload.target=temporary-public-storage",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",

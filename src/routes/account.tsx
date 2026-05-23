@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowRight, Banknote, CirclePlus, MapPin, PencilLine, Trash2 } from "lucide-react";
+import { ArrowRight, Banknote, CirclePlus, MapPin, PencilLine, ShieldCheck, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { AuthGate } from "@/components/site/auth/AuthGate";
@@ -82,6 +82,7 @@ function AccountContent() {
   const displayName = getDisplayName(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? "Customer");
   const email = user?.email ?? "Unknown email";
   const initials = getInitials(displayName, email);
+  const [activeSection, setActiveSection] = useState<"overview" | "profile" | "addresses" | "orders">("overview");
 
   const [profileForm, setProfileForm] = useState({ fullName: displayName, email });
   const [passwordForm, setPasswordForm] = useState({ password: "", confirmPassword: "" });
@@ -94,10 +95,10 @@ function AccountContent() {
   const [addressForm, setAddressForm] = useState<AddressFormState>(emptyAddressForm);
 
   const defaultAddress = useMemo(() => addresses.find((address) => address.default) ?? addresses[0] ?? null, [addresses]);
-  const orderSummary = [
-    { label: "Orders", value: "0", detail: "No purchases yet" },
-    { label: "Credits", value: "$0", detail: "Available store credit" },
-    { label: "Saved addresses", value: String(addresses.length), detail: defaultAddress ? `${defaultAddress.label} set as default` : "Add a checkout address" },
+  const sectionLinks = [
+    { label: "My profile", value: "profile" as const, detail: "Update name, email, and password" },
+    { label: "Addresses", value: "addresses" as const, detail: "Add, edit, and default checkout addresses" },
+    { label: "More", value: "orders" as const, detail: "View your order history" },
   ];
 
   useEffect(() => {
@@ -215,49 +216,100 @@ function AccountContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-20 sm:py-24 lg:py-28">
-      <div className="mb-12 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-        <div className="space-y-5">
+      <div className="mb-12 grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+        <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 border border-white/10 bg-white/[0.05] ring-1 ring-white/[0.04]">
               <AvatarFallback className="bg-gradient-to-br from-white/18 to-white/6 text-sm font-semibold tracking-[0.2em] text-white/90">{initials}</AvatarFallback>
             </Avatar>
-            <div className="space-y-1">
-              <div className="text-[11px] uppercase tracking-[0.3em] text-foreground/35">Customer account</div>
+            <div className="space-y-1.5">
+              <div className="text-[11px] uppercase tracking-[0.3em] text-foreground/35">Your info</div>
               <h1 className="text-4xl font-light tracking-tight text-balance sm:text-5xl lg:text-6xl">{displayName}</h1>
             </div>
           </div>
+
           <p className="max-w-2xl text-sm leading-7 text-foreground/58 sm:text-base">
-            Manage your profile, shipping addresses, and future order history in one calm, premium space designed for faster checkout.
+            A quiet place for your profile, delivery details, and order history. Update your information once and keep checkout effortless.
           </p>
+
+          <div className="flex flex-wrap gap-2.5">
+            {sectionLinks.map((link) => (
+              <button
+                key={link.label}
+                type="button"
+                onClick={() => setActiveSection(link.value)}
+                className={cn(
+                  "group inline-flex flex-col gap-1 rounded-[1.25rem] border px-4 py-3 text-left transition-colors duration-200",
+                  activeSection === link.value ? "border-white/14 bg-white/[0.07]" : "border-white/8 bg-white/[0.035] hover:bg-white/[0.06]",
+                )}
+              >
+                <span className="text-sm font-medium text-foreground/85">{link.label}</span>
+                <span className="text-xs leading-5 text-foreground/45">{link.detail}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 lg:justify-end">
-          <Link to="/collections" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-5 py-3 text-sm text-foreground/80 transition-colors duration-200 hover:bg-white/[0.08]">
+        <div className="space-y-4 lg:justify-self-end lg:max-w-sm">
+          <div className="rounded-[1.75rem] border border-white/8 bg-white/[0.035] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-foreground/35">
+              <ShieldCheck className="size-4 text-[#7DB1FF]" />
+              Private account
+            </div>
+            <div className="mt-3 text-lg font-medium text-foreground/90">{email}</div>
+            <p className="mt-2 text-sm leading-6 text-foreground/55">
+              Secure, minimal, and ready for profile edits, shipping management, and future receipts.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3 lg:justify-end">
+            <Link to="/collections" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-5 py-3 text-sm text-foreground/80 transition-colors duration-200 hover:bg-white/[0.08]">
             Continue shopping
             <ArrowRight className="size-4" />
-          </Link>
-          <Button onClick={handleSignOut} className="h-12 rounded-full border border-white/8 bg-white/[0.04] px-5 text-sm font-medium text-foreground/80 transition-colors duration-200 hover:bg-white/[0.08]">
-            Sign out
-          </Button>
+            </Link>
+            <Button onClick={handleSignOut} className="h-12 rounded-full border border-white/8 bg-white/[0.04] px-5 text-sm font-medium text-foreground/80 transition-colors duration-200 hover:bg-white/[0.08]">
+              Sign out
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {orderSummary.map((item) => (
-          <div key={item.label} className="rounded-[1.75rem] border border-white/8 bg-white/[0.035] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-foreground/35">{item.label}</div>
-            <div className="mt-3 text-3xl font-light tracking-tight text-foreground">{item.value}</div>
-            <div className="mt-2 text-sm leading-6 text-foreground/55">{item.detail}</div>
-          </div>
-        ))}
+      <div className="mt-6 rounded-[2rem] border border-white/8 bg-white/[0.035] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.2)] sm:p-5">
+        <div className="flex flex-wrap gap-2">
+          {sectionLinks.map((link) => (
+            <button
+              key={link.value}
+              type="button"
+              onClick={() => setActiveSection(link.value)}
+              className={cn(
+                "rounded-full px-4 py-2 text-sm transition-colors duration-200",
+                activeSection === link.value ? "bg-white/10 text-foreground" : "text-foreground/55 hover:bg-white/[0.05] hover:text-foreground",
+              )}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <section id="profile" className="rounded-[2rem] border border-white/8 bg-white/[0.04] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.24)] sm:p-8">
+      {activeSection === "overview" ? (
+        <section className="mt-6 rounded-[2rem] border border-white/8 bg-white/[0.035] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)] sm:p-8">
+          <div className="max-w-2xl space-y-3">
+            <div className="text-[11px] uppercase tracking-[0.3em] text-foreground/35">Overview</div>
+            <h2 className="text-2xl font-light tracking-tight">Choose a section to update your account.</h2>
+            <p className="text-sm leading-7 text-foreground/55">
+              Profile, addresses, and order history are organized separately so the page opens clean and stays focused.
+            </p>
+          </div>
+        </section>
+      ) : null}
+
+      {activeSection === "profile" ? (
+        <section id="profile" className="mt-6 rounded-[2rem] border border-white/8 bg-white/[0.04] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.24)] sm:p-8">
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
               <div className="text-[11px] uppercase tracking-[0.3em] text-foreground/35">Profile</div>
-              <h2 className="mt-2 text-2xl font-light tracking-tight">Your details</h2>
+              <h2 className="mt-2 text-2xl font-light tracking-tight">My profile</h2>
             </div>
           </div>
 
@@ -327,12 +379,14 @@ function AccountContent() {
             </form>
           </div>
         </section>
+      ) : null}
 
-        <section id="addresses" className="rounded-[2rem] border border-white/8 bg-white/[0.035] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-8">
+      {activeSection === "addresses" ? (
+        <section id="addresses" className="mt-6 rounded-[2rem] border border-white/8 bg-white/[0.035] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-8">
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
               <div className="text-[11px] uppercase tracking-[0.3em] text-foreground/35">Addresses</div>
-              <h2 className="mt-2 text-2xl font-light tracking-tight">Checkout-ready shipping addresses</h2>
+              <h2 className="mt-2 text-2xl font-light tracking-tight">Address book</h2>
             </div>
             <Button type="button" variant="outline" onClick={clearAddressForm} className="h-10 rounded-full border-white/10 bg-white/[0.03] px-4 text-sm text-foreground/75 hover:bg-white/[0.06]">
               <CirclePlus className="mr-2 size-4" />
@@ -437,33 +491,35 @@ function AccountContent() {
             </div>
           </form>
         </section>
-      </div>
+      ) : null}
 
-      <section id="orders" className="mt-6 rounded-[2rem] border border-white/8 bg-white/[0.035] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)] sm:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.3em] text-foreground/35">Orders</div>
-            <h2 className="mt-2 text-2xl font-light tracking-tight">Order history</h2>
+      {activeSection === "orders" ? (
+        <section id="orders" className="mt-6 rounded-[2rem] border border-white/8 bg-white/[0.035] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)] sm:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.3em] text-foreground/35">Orders</div>
+              <h2 className="mt-2 text-2xl font-light tracking-tight">Order history</h2>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-2 text-xs text-foreground/50">
+              <Banknote className="size-4" />
+              Ready for future receipts and reorders
+            </div>
           </div>
-          <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-2 text-xs text-foreground/50">
-            <Banknote className="size-4" />
-            Ready for future receipts and reorders
-          </div>
-        </div>
 
-        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-white/8 bg-white/[0.025]">
-          <div className="grid grid-cols-4 gap-4 border-b border-white/8 px-5 py-4 text-[11px] uppercase tracking-[0.24em] text-foreground/35">
-            <span>Date</span>
-            <span className="col-span-2">Items</span>
-            <span className="text-right">Status</span>
+          <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-white/8 bg-white/[0.025]">
+            <div className="grid grid-cols-4 gap-4 border-b border-white/8 px-5 py-4 text-[11px] uppercase tracking-[0.24em] text-foreground/35">
+              <span>Date</span>
+              <span className="col-span-2">Items</span>
+              <span className="text-right">Status</span>
+            </div>
+            <div className="grid grid-cols-4 gap-4 px-5 py-6 text-sm text-foreground/55">
+              <span>—</span>
+              <span className="col-span-2">Your recent purchases will appear here after checkout.</span>
+              <span className="text-right">Empty for now</span>
+            </div>
           </div>
-          <div className="grid grid-cols-4 gap-4 px-5 py-6 text-sm text-foreground/55">
-            <span>—</span>
-            <span className="col-span-2">Your recent purchases will appear here after checkout.</span>
-            <span className="text-right">Empty for now</span>
-          </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }
