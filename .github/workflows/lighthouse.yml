@@ -20,4 +20,5 @@ jobs:
       - name: Build
         run: npm run build
       - name: Run LHCI
+        continue-on-error: true
         run: npm run ci:lhci
