@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuccessRouteImport } from './routes/success'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SigninRouteImport } from './routes/signin'
 import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -25,6 +27,16 @@ import { Route as ProductsProductIdRouteImport } from './routes/products.$produc
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
   path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollectionsRoute = CollectionsRouteImport.update({
@@ -94,6 +106,8 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
 }
@@ -108,6 +122,8 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
 }
@@ -123,6 +139,8 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
   '/products/$productId': typeof ProductsProductIdRoute
 }
@@ -139,6 +157,8 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collections'
+    | '/signin'
+    | '/signup'
     | '/success'
     | '/products/$productId'
   fileRoutesByTo: FileRoutesByTo
@@ -153,6 +173,8 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collections'
+    | '/signin'
+    | '/signup'
     | '/success'
     | '/products/$productId'
   id:
@@ -167,6 +189,8 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collections'
+    | '/signin'
+    | '/signup'
     | '/success'
     | '/products/$productId'
   fileRoutesById: FileRoutesById
@@ -182,6 +206,8 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CollectionsRoute: typeof CollectionsRoute
+  SigninRoute: typeof SigninRoute
+  SignupRoute: typeof SignupRoute
   SuccessRoute: typeof SuccessRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
 }
@@ -193,6 +219,20 @@ declare module '@tanstack/react-router' {
       path: '/success'
       fullPath: '/success'
       preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collections': {
@@ -286,6 +326,8 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CollectionsRoute: CollectionsRoute,
+  SigninRoute: SigninRoute,
+  SignupRoute: SignupRoute,
   SuccessRoute: SuccessRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
 }

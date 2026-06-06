@@ -5,11 +5,11 @@ import { LoaderCircle } from "lucide-react";
 import { AuthShell } from "@/components/site/auth/AuthShell";
 import { useAuth } from "@/contexts/auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { normalizeAuthError, safeReturnTo } from "@/lib/supabase/auth";
+import { normalizeAuthError } from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/auth-callback")({
   validateSearch: (search: Record<string, unknown>) => ({
-    next: typeof search.next === "string" ? search.next : "/account",
+    next: typeof search.next === "string" ? search.next : "/",
   }),
   head: () => ({
     meta: [{ title: "Confirm access — Zyro" }],
@@ -19,16 +19,19 @@ export const Route = createFileRoute("/auth-callback")({
 
 function AuthCallbackPage() {
   const router = useRouter();
-  const search = Route.useSearch();
-  const { ready, user } = useAuth();
+  const { ready, user, role, roleReady } = useAuth();
   const [status, setStatus] = useState<"loading" | "error">("loading");
   const [message, setMessage] = useState("Confirming your secure link.");
 
   useEffect(() => {
     let active = true;
 
-    if (ready && user) {
-      router.navigate({ to: safeReturnTo(search.next) });
+    if (ready && user && roleReady) {
+      if (role === "admin") {
+        router.navigate({ to: "/admin" });
+      } else {
+        router.navigate({ to: "/" });
+      }
       return;
     }
 
@@ -60,7 +63,12 @@ function AuthCallbackPage() {
         return;
       }
 
-      router.navigate({ to: safeReturnTo(search.next) });
+      if (!active) {
+        return;
+      }
+
+      setStatus("loading");
+      setMessage("Role checks in progress.");
     }
 
     exchangeCode();
@@ -68,7 +76,7 @@ function AuthCallbackPage() {
     return () => {
       active = false;
     };
-  }, [ready, router, search.next, user]);
+  }, [ready, role, roleReady, router, user]);
 
   return (
     <AuthShell>

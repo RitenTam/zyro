@@ -11,6 +11,11 @@ type AuthActionResult = {
 
 type AuthProviderName = "google" | "apple";
 
+type AuthProfile = {
+  id: string;
+  role: string | null;
+};
+
 type AuthContextValue = {
   clientAvailable: boolean;
   configurationError?: string;
@@ -18,6 +23,10 @@ type AuthContextValue = {
   ready: boolean;
   session: Session | null;
   user: User | null;
+  profile: AuthProfile | null;
+  role: string | null;
+  roleLoading: boolean;
+  roleReady: boolean;
   updateProfile: (profile: { fullName?: string; email?: string }) => Promise<AuthActionResult>;
   signIn: (email: string, password: string) => Promise<AuthActionResult>;
   signUp: (email: string, password: string, next?: string | null) => Promise<AuthActionResult>;
@@ -33,6 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clientAvailable = isSupabaseConfigured();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const [roleLoading, setRoleLoading] = useState(false);
   const [configurationError, setConfigurationError] = useState<string | undefined>(
     clientAvailable ? undefined : "Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable authentication.",
   );
@@ -92,6 +103,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [client]);
 
+  useEffect(() => {
+    if (!client || loading) {
+      return;
+    }
+
+    const authenticatedUserId = session?.user?.id;
+    if (!authenticatedUserId) {
+      setProfile(null);
+      setRoleLoading(false);
+      return;
+    }
+
+    let active = true;
+    setRoleLoading(true);
+
+    client
+      .from("profiles")
+      .select("id, role")
+      .eq("id", authenticatedUserId)
+      .maybeSingle<AuthProfile>()
+      .then(({ data, error }) => {
+        if (!active) {
+          return;
+        }
+
+        if (error) {
+          console.error("[auth] Failed to fetch profile for role resolution.", {
+            authenticatedUserId,
+            error,
+          });
+          setProfile(null);
+          return;
+        }
+
+        if (!data) {
+          console.warn("[auth] No profile found for authenticated user.", { authenticatedUserId });
+          setProfile(null);
+          return;
+        }
+
+        if (data.id !== authenticatedUserId) {
+          console.error("[auth] Profile id mismatch while resolving role.", {
+            authenticatedUserId,
+            profileId: data.id,
+          });
+          setProfile(null);
+          return;
+        }
+
+        setProfile(data);
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        console.error("[auth] Unexpected error while resolving profile role.", {
+          authenticatedUserId,
+          error,
+        });
+        setProfile(null);
+      })
+      .finally(() => {
+        if (!active) {
+          return;
+        }
+        setRoleLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [client, loading, session?.user?.id]);
+
   const value = useMemo<AuthContextValue>(() => {
     const withClient = async (
       handler: (supabaseClient: NonNullable<typeof client>) => Promise<AuthActionResult>,
@@ -114,6 +199,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ready: !loading,
       session,
       user: session?.user ?? null,
+      profile,
+      role: profile?.role ?? null,
+      roleLoading,
+      roleReady: !session?.user || !roleLoading,
       updateProfile: (profile) =>
         withClient(async (supabaseClient) => {
           const updates: { email?: string; data?: { full_name?: string } } = {};
@@ -215,7 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return {};
         }),
     };
-  }, [client, clientAvailable, configurationError, loading, session]);
+  }, [client, clientAvailable, configurationError, loading, profile, roleLoading, session]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

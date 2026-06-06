@@ -22,7 +22,18 @@ type BannerState =
 
 export function AuthEntryForm({ nextPath, initialMode = "signin" }: AuthEntryFormProps) {
   const router = useRouter();
-  const { ready, user, signIn, signUp, sendPasswordReset, signInWithProvider, clientAvailable, configurationError } = useAuth();
+  const {
+    ready,
+    user,
+    role,
+    roleReady,
+    signIn,
+    signUp,
+    sendPasswordReset,
+    signInWithProvider,
+    clientAvailable,
+    configurationError,
+  } = useAuth();
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,10 +45,17 @@ export function AuthEntryForm({ nextPath, initialMode = "signin" }: AuthEntryFor
   const returnTo = useMemo(() => safeReturnTo(nextPath), [nextPath]);
 
   useEffect(() => {
-    if (ready && user) {
-      router.navigate({ to: returnTo });
+    if (!ready || !user || !roleReady) {
+      return;
     }
-  }, [ready, returnTo, router, user]);
+
+    if (role === "admin") {
+      router.navigate({ to: "/admin" });
+      return;
+    }
+
+    router.navigate({ to: "/" });
+  }, [ready, role, roleReady, router, user]);
 
   useEffect(() => {
     setFieldError(null);
@@ -92,7 +110,6 @@ export function AuthEntryForm({ nextPath, initialMode = "signin" }: AuthEntryFor
         return;
       }
 
-      router.navigate({ to: returnTo });
       return;
     }
 
@@ -113,7 +130,6 @@ export function AuthEntryForm({ nextPath, initialMode = "signin" }: AuthEntryFor
         return;
       }
 
-      router.navigate({ to: returnTo });
       return;
     }
 
