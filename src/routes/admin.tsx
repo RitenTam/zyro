@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { AdminGate } from "@/components/site/auth/AdminGate";
@@ -80,12 +80,12 @@ function DashboardCard({
       <h2 className="text-xl font-light tracking-tight">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-foreground/60">{description}</p>
       {to ? (
-        <Link
-          to={to}
+        <a
+          href={to}
           className="mt-5 inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-medium text-foreground/75 transition-colors hover:bg-white/[0.08] hover:text-foreground"
         >
           {cta ?? "Open"}
-        </Link>
+        </a>
       ) : null}
     </article>
   );
