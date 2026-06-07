@@ -9,13 +9,13 @@ import { BrandValues } from "@/components/site/BrandValues";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Aether — Architectural protection for the modern lifestyle" },
+      { title: "Zyro" },
       {
         name: "description",
         content:
           "Premium silicone, woven, and MagSafe phone cases. Engineered to aerospace tolerance. Designed in San Francisco.",
       },
-      { property: "og:title", content: "Aether — Premium tech accessories" },
+      { property: "og:title", content: "Zyro" },
       {
         property: "og:description",
         content: "Engineered for the modern nomad. Liquid silicone meets architectural precision.",
