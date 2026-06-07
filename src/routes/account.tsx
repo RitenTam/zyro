@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth";
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/account")({
@@ -46,36 +47,9 @@ type OrderPreview = {
   items: string[];
 };
 
-const initialAddresses: Address[] = [
-  {
-    id: "home",
-    label: "Home",
-    recipient: "Zyro Customer",
-    phone: "+1 (555) 010-2401",
-    line1: "24 Mercer Street",
-    line2: "Apt 4B",
-    city: "New York",
-    region: "NY",
-    postalCode: "10013",
-    country: "United States",
-    deliveryNotes: "Leave with concierge if available.",
-    default: true,
-  },
-  {
-    id: "studio",
-    label: "Studio",
-    recipient: "Zyro Customer",
-    phone: "+1 (555) 010-2401",
-    line1: "900 Broadway",
-    line2: "Floor 6",
-    city: "New York",
-    region: "NY",
-    postalCode: "10003",
-    country: "United States",
-    deliveryNotes: "Call before delivery.",
-    default: false,
-  },
-];
+// Start with no addresses for new users. Addresses are loaded from the
+// `profiles` table (JSON column `addresses`) when the user is authenticated.
+// Dummy/example addresses were removed so they don't appear on new accounts.
 
 const recentOrders: OrderPreview[] = [
   {
@@ -152,13 +126,44 @@ function AccountContent() {
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-  const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [addressForm, setAddressForm] = useState<AddressFormState>(emptyAddressForm);
 
   useEffect(() => {
     setProfileForm({ fullName: displayName, email });
   }, [displayName, email]);
+
+  // Load persisted addresses for authenticated users from the `profiles` table.
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadAddresses() {
+      if (!user || !isSupabaseConfigured()) return;
+
+      try {
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase.from("profiles").select("addresses").eq("id", user.id).maybeSingle();
+        if (error) {
+          console.error("Failed to load addresses for profile", { error });
+          return;
+        }
+
+        if (!mounted) return;
+
+        const loaded: Address[] = (data && (data as any).addresses) || [];
+        setAddresses(Array.isArray(loaded) ? loaded : []);
+      } catch (err) {
+        console.error("Unexpected error while loading addresses", err);
+      }
+    }
+
+    void loadAddresses();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   async function handleSignOut() {
     await signOut();
@@ -231,33 +236,35 @@ function AccountContent() {
 
   function handleAddressSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     const normalized: Address = {
       ...addressForm,
       id: addressForm.id ?? `address-${Date.now()}`,
       default: editingAddressId ? addresses.some((address) => address.id === editingAddressId && address.default) : addresses.length === 0,
     };
 
-    setAddresses((current) => {
-      if (editingAddressId) {
-        return current.map((address) => (address.id === editingAddressId ? { ...normalized, default: address.default } : address));
-      }
+    let next: Address[];
 
-      const shouldDefault = current.length === 0;
-      return [{ ...normalized, default: shouldDefault }, ...current.map((address) => ({ ...address, default: address.default }))];
-    });
+    if (editingAddressId) {
+      next = addresses.map((address) => (address.id === editingAddressId ? { ...normalized, default: address.default } : address));
+    } else {
+      const shouldDefault = addresses.length === 0;
+      next = [{ ...normalized, default: shouldDefault }, ...addresses.map((address) => ({ ...address, default: address.default }))];
+    }
+
+    setAddresses(next);
+    void persistAddresses(next);
 
     clearAddressForm();
   }
 
   function removeAddress(addressId: string) {
-    setAddresses((current) => {
-      const next = current.filter((address) => address.id !== addressId);
-      if (next.length && !next.some((address) => address.default)) {
-        next[0] = { ...next[0], default: true };
-      }
-      return next;
-    });
+    const next = addresses.filter((address) => address.id !== addressId);
+    if (next.length && !next.some((address) => address.default)) {
+      next[0] = { ...next[0], default: true };
+    }
+
+    setAddresses(next);
+    void persistAddresses(next);
 
     if (editingAddressId === addressId) {
       clearAddressForm();
@@ -265,7 +272,24 @@ function AccountContent() {
   }
 
   function setDefaultAddress(addressId: string) {
-    setAddresses((current) => current.map((address) => ({ ...address, default: address.id === addressId })));
+    const next = addresses.map((address) => ({ ...address, default: address.id === addressId }));
+    setAddresses(next);
+    void persistAddresses(next);
+  }
+
+  async function persistAddresses(next: Address[]) {
+    if (!user || !isSupabaseConfigured()) return;
+
+    try {
+      const supabase = getSupabaseClient();
+      // upsert will create the profile row if it doesn't exist yet.
+      const { error } = await supabase.from("profiles").upsert({ id: user.id, addresses: next });
+      if (error) {
+        console.error("Failed to persist addresses to profile", { error });
+      }
+    } catch (err) {
+      console.error("Unexpected error persisting addresses", err);
+    }
   }
 
   return (
