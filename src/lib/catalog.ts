@@ -27,6 +27,7 @@ export interface Product {
   collectionSlug?: string;
   material: ProductMaterial;
   price: number;
+  stock: number;
   description: string;
   image: string;
   colors: ProductColor[];
@@ -61,10 +62,21 @@ export async function fetchProducts(): Promise<Product[]> {
     throw new Error(error.message);
   }
 
-  return (data ?? [])
+  const products = (data ?? [])
     .map((row) => normalizeProductRow(row as Record<string, unknown>))
     .filter((product): product is Product => product !== null)
     .sort(sortProducts);
+
+  console.debug("[products] Supabase catalog fetch", {
+    total: products.length,
+    stockByProduct: products.map((product) => ({
+      id: product.id,
+      slug: product.slug,
+      stock: product.stock,
+    })),
+  });
+
+  return products;
 }
 
 export function getProductByIdentifier(products: Product[], identifier: string) {
@@ -117,6 +129,7 @@ function normalizeProductRow(row: Record<string, unknown>): Product | null {
   const colors = normalizeColors(firstValue(row, ["colors", "swatches", "colorways"]), variants);
   const specs = normalizeSpecifications(firstValue(row, ["specs", "specifications", "features"]));
   const price = firstNumber(row, ["price", "amount", "unit_price"]) ?? variants[0]?.price ?? 0;
+  const stock = firstNumber(row, ["stock", "inventory", "available", "quantity"]) ?? 0;
   const image = firstString(row, ["image", "image_url", "thumbnail", "hero_image"]) || variants[0]?.images?.[0] || "";
 
   return {
@@ -127,6 +140,7 @@ function normalizeProductRow(row: Record<string, unknown>): Product | null {
     collectionSlug,
     material,
     price,
+    stock,
     description,
     image,
     colors,

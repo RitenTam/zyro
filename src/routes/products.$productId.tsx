@@ -109,6 +109,15 @@ function ProductPage() {
     setSelectedVariant(selectInitialVariant(product, nextColor?.name));
   }, [product]);
 
+  useEffect(() => {
+    console.debug("[products] Product page rendered stock", {
+      id: product.id,
+      slug: product.slug,
+      stock: product.stock,
+      selectedVariantAvailable: selectedVariant?.available ?? null,
+    });
+  }, [product.id, product.slug, product.stock, selectedVariant?.available]);
+
   const primaryImage = selectedVariant?.images?.[0] ?? product.image;
 
   return (
@@ -141,6 +150,7 @@ function ProductPage() {
               <p className="text-3xl font-bold">${selectedVariant?.price ?? product.price}</p>
               <p className="text-sm text-foreground/60">incl. VAT where applicable</p>
             </div>
+            <p className="mt-3 text-sm text-foreground/55">Stock: {product.stock}</p>
           </div>
 
           {product.colors.length > 0 ? (
@@ -234,9 +244,17 @@ function AddToCartButton({
 }) {
   const { addItem } = useCart();
   const price = selectedVariant?.price ?? product.price;
-  const available = typeof selectedVariant?.available === "number"
-    ? selectedVariant!.available
-    : product.variants?.reduce((s, v) => s + (v.available ?? 0), 0) ?? 0;
+
+  const available = product.stock;
+
+  useEffect(() => {
+    console.debug("[products] Product UI stock rendered", {
+      id: product.id,
+      slug: product.slug,
+      stock: product.stock,
+      selectedVariantId: selectedVariant?.id ?? null,
+    });
+  }, [product.id, product.slug, product.stock, selectedVariant?.id]);
 
   function handleAdd() {
     if (available <= 0) return;

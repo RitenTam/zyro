@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import ResponsiveImage from "@/components/ui/responsive-image";
 import {
@@ -27,6 +27,17 @@ function CollectionsPage() {
   const [materialFilter, setMaterialFilter] = useState("all");
   const [colorFilter, setColorFilter] = useState("all");
   const [sortFilter, setSortFilter] = useState("featured");
+
+  useEffect(() => {
+    console.debug("[products] Collections page rendered stock", {
+      total: products.length,
+      stockByProduct: products.map((product) => ({
+        id: product.id,
+        slug: product.slug,
+        stock: product.stock,
+      })),
+    });
+  }, [products]);
 
   const deviceOptions = mergeUniqueOptions(DEFAULT_DEVICE_OPTIONS, collectDeviceOptions(products));
   const materialOptions = mergeUniqueOptions(DEFAULT_MATERIAL_OPTIONS, collectMaterialOptions(products));
@@ -218,6 +229,7 @@ function CollectionsPage() {
                         <div>
                           <h3 className="text-base font-medium tracking-tight">{product.name}</h3>
                           <p className="mt-1 text-sm text-foreground/55">{product.material}</p>
+                          <p className="mt-1 text-xs text-foreground/45">Stock: {product.stock}</p>
                         </div>
                         <div className="text-sm font-medium tabular-nums text-foreground/80">${product.price}</div>
                       </div>
