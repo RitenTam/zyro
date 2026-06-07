@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { AdminGate } from "@/components/site/auth/AdminGate";
@@ -28,6 +28,8 @@ function AdminPage() {
 
 function AdminContent({ profile }: { profile: AdminProfile | null }) {
   const { user } = useAuth();
+  const matchRoute = useMatchRoute();
+  const isProductsPage = Boolean(matchRoute({ to: "/admin/products", fuzzy: false }));
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
@@ -40,26 +42,30 @@ function AdminContent({ profile }: { profile: AdminProfile | null }) {
         <p className="text-xs text-foreground/45">Role: {profile?.role ?? "admin"}</p>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardCard
-          title="Products"
-          description="Manage product catalog, pricing, and merchandising."
-          to="/admin/products"
-          cta="Open products"
-        />
-        <DashboardCard
-          title="Inventory"
-          description="Monitor stock levels and replenishment workflows."
-        />
-        <DashboardCard
-          title="Orders"
-          description="Track order lifecycle, payments, and fulfillment status."
-        />
-        <DashboardCard
-          title="Customers"
-          description="Review customer activity and support handoff data."
-        />
-      </section>
+      {!isProductsPage ? (
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <DashboardCard
+            title="Products"
+            description="Manage product catalog, pricing, and merchandising."
+            to="/admin/products"
+            cta="Open products"
+          />
+          <DashboardCard
+            title="Inventory"
+            description="Monitor stock levels and replenishment workflows."
+          />
+          <DashboardCard
+            title="Orders"
+            description="Track order lifecycle, payments, and fulfillment status."
+          />
+          <DashboardCard
+            title="Customers"
+            description="Review customer activity and support handoff data."
+          />
+        </section>
+      ) : null}
+
+      <Outlet />
     </div>
   );
 }
