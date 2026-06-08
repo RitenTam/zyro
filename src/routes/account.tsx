@@ -48,7 +48,12 @@ const emptyAddressForm: AddressFormState = {
 
 type Address = AddressFormState & {
   id: string;
-  default: boolean;
+  isDefault: boolean;
+};
+
+type AddressInput = AddressFormState & {
+  id?: string;
+  isDefault: boolean;
 };
 
 type OrderPreview = {
@@ -61,7 +66,7 @@ type OrderPreview = {
 };
 
 // Start with no addresses for new users. Addresses are loaded from the
-// `profiles` table (JSON column `addresses`) when the user is authenticated.
+// `addresses` table when the user is authenticated.
 // Dummy/example addresses were removed so they don't appear on new accounts.
 
 const recentOrders: OrderPreview[] = [
@@ -159,14 +164,16 @@ function AccountContent() {
         const { data, error } = await supabase
           .from("addresses")
           .select(
-            "id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, default"
+            "id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, is_default"
           )
           .eq("user_id", user.id)
-          .order("default", { ascending: false })
+          .order("is_default", { ascending: false })
           .order("created_at", { ascending: false });
 
         if (error) {
-          console.error("Failed to load addresses", { error });
+          console.error(error);
+          console.error(error?.message);
+          console.error(error?.details);
           return;
         }
 
@@ -185,13 +192,14 @@ function AccountContent() {
               postalCode: row.postal_code,
               country: row.country,
               deliveryNotes: row.delivery_notes,
-              default: row.default ?? false,
+              isDefault: row.is_default ?? false,
             }))
           : [];
 
         setAddresses(loaded);
       } catch (err) {
-        console.error("Unexpected error while loading addresses", err);
+        console.error(err);
+        console.error(err instanceof Error ? err.message : "");
       }
     }
 
@@ -276,30 +284,31 @@ function AccountContent() {
     if (!user || !isSupabaseConfigured()) return;
 
     const isEdit = Boolean(editingAddressId);
-    const normalized: Address = {
+    const normalized: AddressInput = {
       ...addressForm,
-      id: addressForm.id ?? `address-${Date.now()}`,
-      default: isEdit
-        ? addresses.some((address) => address.id === editingAddressId && address.default)
+      id: editingAddressId ?? undefined,
+      isDefault: isEdit
+        ? addresses.some((address) => address.id === editingAddressId && address.isDefault)
         : addresses.length === 0,
     };
 
+    const savedAddress = await persistAddress(normalized, isEdit);
+    if (!savedAddress) return;
+
     const next = isEdit
-      ? addresses.map((address) => (address.id === editingAddressId ? { ...normalized, default: address.default } : address))
-      : [{ ...normalized, default: addresses.length === 0 }, ...addresses];
+      ? addresses.map((address) => (address.id === savedAddress.id ? savedAddress : address))
+      : [{ ...savedAddress, isDefault: savedAddress.isDefault ?? false }, ...addresses];
 
     setAddresses(next);
-    await persistAddress(normalized, isEdit);
-
     clearAddressForm();
   }
 
   async function removeAddress(addressId: string) {
-    const isDefault = addresses.some((address) => address.id === addressId && address.default);
+    const isDefault = addresses.some((address) => address.id === addressId && address.isDefault);
     const next = addresses.filter((address) => address.id !== addressId);
 
-    if (next.length && !next.some((address) => address.default)) {
-      next[0] = { ...next[0], default: true };
+    if (next.length && !next.some((address) => address.isDefault)) {
+      next[0] = { ...next[0], isDefault: true };
     }
 
     setAddresses(next);
@@ -313,26 +322,28 @@ function AccountContent() {
       const supabase = getSupabaseClient();
       const { error } = await supabase.from("addresses").delete().eq("id", addressId).eq("user_id", user.id);
       if (error) {
-        console.error("Failed to delete address", { error });
+        console.error(error);
+        console.error(error?.message);
+        console.error(error?.details);
       } else if (isDefault && next.length) {
         await persistSetDefaultAddress(next[0].id);
       }
     } catch (err) {
-      console.error("Unexpected error removing address", err);
+      console.error(err);
+      console.error(err instanceof Error ? err.message : "");
     }
   }
 
   function setDefaultAddress(addressId: string) {
-    const next = addresses.map((address) => ({ ...address, default: address.id === addressId }));
+    const next = addresses.map((address) => ({ ...address, isDefault: address.id === addressId }));
     setAddresses(next);
     void persistSetDefaultAddress(addressId);
   }
 
-  async function persistAddress(address: Address, isEdit: boolean) {
-    if (!user || !isSupabaseConfigured()) return;
+  async function persistAddress(address: AddressInput, isEdit: boolean) {
+    if (!user || !isSupabaseConfigured()) return null;
 
     const payload = {
-      id: address.id,
       user_id: user.id,
       label: address.label,
       recipient: address.recipient,
@@ -344,29 +355,88 @@ function AccountContent() {
       postal_code: address.postalCode,
       country: address.country,
       delivery_notes: address.deliveryNotes,
-      default: address.default,
-    };
+      is_default: address.isDefault,
+    } as const;
 
     try {
       const supabase = getSupabaseClient();
 
-      if (address.default) {
-        const { error: resetError } = await supabase.from("addresses").update({ default: false }).eq("user_id", user.id).neq("id", address.id);
+      if (address.isDefault) {
+        const { error: resetError } = await supabase
+          .from("addresses")
+          .update({ is_default: false })
+          .eq("user_id", user.id)
+          .neq("id", address.id);
         if (resetError) {
-          console.error("Failed to reset default addresses", { error: resetError });
+          console.error(resetError);
+          console.error(resetError?.message);
+          console.error(resetError?.details);
         }
       }
 
-      const query = isEdit
-        ? supabase.from("addresses").update(payload).eq("id", address.id).eq("user_id", user.id)
-        : supabase.from("addresses").insert(payload);
-
-      const { error } = await query;
-      if (error) {
-        console.error("Failed to persist address", { error });
+      if (isEdit) {
+        if (!address.id) return null;
+        const { data, error } = await supabase
+          .from("addresses")
+          .update(payload)
+          .eq("id", address.id)
+          .eq("user_id", user.id)
+          .select("id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, is_default")
+          .single();
+        if (error) {
+          console.error(error);
+          console.error(error?.message);
+          console.error(error?.details);
+          return null;
+        }
+        if (!data) return null;
+        return {
+          id: data.id,
+          label: data.label,
+          recipient: data.recipient,
+          phone: data.phone,
+          line1: data.line1,
+          line2: data.line2,
+          city: data.city,
+          region: data.region,
+          postalCode: data.postal_code,
+          country: data.country,
+          deliveryNotes: data.delivery_notes,
+          isDefault: data.is_default ?? false,
+        };
       }
+
+      const { data, error } = await supabase
+        .from("addresses")
+        .insert(payload)
+        .select("id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, is_default")
+        .single();
+      if (error) {
+        console.error(error);
+        console.error(error?.message);
+        console.error(error?.details);
+        return null;
+      }
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        label: data.label,
+        recipient: data.recipient,
+        phone: data.phone,
+        line1: data.line1,
+        line2: data.line2,
+        city: data.city,
+        region: data.region,
+        postalCode: data.postal_code,
+        country: data.country,
+        deliveryNotes: data.delivery_notes,
+        isDefault: data.is_default ?? false,
+      };
     } catch (err) {
-      console.error("Unexpected error persisting address", err);
+      console.error(err);
+      console.error(err instanceof Error ? err.message : "");
+      return null;
     }
   }
 
@@ -375,17 +445,29 @@ function AccountContent() {
 
     try {
       const supabase = getSupabaseClient();
-      const { error: resetError } = await supabase.from("addresses").update({ default: false }).eq("user_id", user.id);
+      const { error: resetError } = await supabase
+        .from("addresses")
+        .update({ is_default: false })
+        .eq("user_id", user.id);
       if (resetError) {
-        console.error("Failed to reset default addresses", { error: resetError });
+        console.error(resetError);
+        console.error(resetError?.message);
+        console.error(resetError?.details);
       }
 
-      const { error: setError } = await supabase.from("addresses").update({ default: true }).eq("id", addressId).eq("user_id", user.id);
+      const { error: setError } = await supabase
+        .from("addresses")
+        .update({ is_default: true })
+        .eq("id", addressId)
+        .eq("user_id", user.id);
       if (setError) {
-        console.error("Failed to set default address", { error: setError });
+        console.error(setError);
+        console.error(setError?.message);
+        console.error(setError?.details);
       }
     } catch (err) {
-      console.error("Unexpected error setting default address", err);
+      console.error(err);
+      console.error(err instanceof Error ? err.message : "");
     }
   }
 
@@ -499,11 +581,11 @@ function AccountContent() {
 
           <div className="space-y-2">
             {addresses.map((address) => (
-              <div key={address.id} className={cn("flex flex-col gap-3 rounded-2xl px-1 py-3 sm:flex-row sm:items-start sm:justify-between", address.default && "bg-white/[0.03]") }>
+              <div key={address.id} className={cn("flex flex-col gap-3 rounded-2xl px-1 py-3 sm:flex-row sm:items-start sm:justify-between", address.isDefault && "bg-white/[0.03]") }>
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium text-foreground/88">{address.label}</span>
-                    {address.default ? <span className="text-[11px] uppercase tracking-[0.22em] text-foreground/45">Default</span> : null}
+                    {address.isDefault ? <span className="text-[11px] uppercase tracking-[0.22em] text-foreground/45">Default</span> : null}
                   </div>
                   <p className="text-sm leading-6 text-foreground/58">
                     {address.line1}
@@ -521,7 +603,7 @@ function AccountContent() {
                   <button type="button" onClick={() => removeAddress(address.id)} className="text-sm text-foreground/45 transition-colors duration-200 hover:text-foreground/75">
                     Delete
                   </button>
-                  {!address.default ? (
+                  {!address.isDefault ? (
                     <button type="button" onClick={() => setDefaultAddress(address.id)} className="text-sm text-foreground/55 transition-colors duration-200 hover:text-foreground/85">
                       Default
                     </button>

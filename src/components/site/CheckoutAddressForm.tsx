@@ -64,7 +64,7 @@ export function CheckoutAddressForm({
     if (!validateForm()) return;
 
     const newAddress: CheckoutAddress = {
-      id: form.id?.trim() || `address-${Date.now()}`,
+      ...(form.id ? { id: form.id.trim() } : {}),
       label: form.label?.trim() || "",
       recipient: form.recipient?.trim() || "",
       phone: form.phone?.trim() || "",

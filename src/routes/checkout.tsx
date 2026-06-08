@@ -53,16 +53,18 @@ function CheckoutContent() {
         const { data, error: err } = await supabase
           .from("addresses")
           .select(
-            "id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, default"
+            "id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, is_default"
           )
           .eq("user_id", user.id)
-          .order("default", { ascending: false })
+          .order("is_default", { ascending: false })
           .order("created_at", { ascending: false });
 
         if (!mounted) return;
 
         if (err) {
-          console.error("Failed to load addresses", err);
+          console.error(err);
+          console.error(err?.message);
+          console.error(err?.details);
           setError("Failed to load your addresses");
           setIsLoadingAddresses(false);
           return;
@@ -81,12 +83,12 @@ function CheckoutContent() {
               postalCode: row.postal_code,
               country: row.country,
               deliveryNotes: row.delivery_notes,
-              default: row.default ?? false,
+              isDefault: row.is_default ?? false,
             }))
           : [];
         setAddresses(loaded);
 
-        const defaultAddress = loaded.find((address) => address.default);
+        const defaultAddress = loaded.find((address) => address.isDefault);
         const initialAddress = defaultAddress || loaded[0] || null;
 
         if (initialAddress) {
@@ -112,66 +114,137 @@ function CheckoutContent() {
   }, [user]);
 
   async function persistAddressToAddressTable(address: CheckoutAddress) {
-    if (!user || !isSupabaseConfigured()) return;
+    if (!user || !isSupabaseConfigured()) return null;
+
+    const shouldDefault = addresses.length === 0;
+    const payload = {
+      user_id: user.id,
+      label: address.label,
+      recipient: address.recipient,
+      phone: address.phone,
+      line1: address.line1,
+      line2: address.line2,
+      city: address.city,
+      region: address.region,
+      postal_code: address.postalCode,
+      country: address.country,
+      delivery_notes: address.deliveryNotes,
+      is_default: address.isDefault ?? shouldDefault,
+    } as const;
 
     try {
       const supabase = getSupabaseClient();
-      const nextAddresses = [address, ...addresses.filter((item) => item.id !== address.id)];
-      setAddresses(nextAddresses);
-      setSelectedAddressId(address.id);
+      let savedAddress: CheckoutAddress | null = null;
 
-      if (nextAddresses.length === 1) {
-        address.default = true;
-      }
+      if (address.id) {
+        if (payload.is_default) {
+          const { error: resetError } = await supabase
+            .from("addresses")
+            .update({ is_default: false })
+            .eq("user_id", user.id)
+            .neq("id", address.id);
+          if (resetError) {
+            console.error(resetError);
+            console.error(resetError?.message);
+            console.error(resetError?.details);
+          }
+        }
 
-      if (address.default) {
-        const { error: resetError } = await supabase
+        const { data, error } = await supabase
           .from("addresses")
-          .update({ default: false })
+          .update(payload)
+          .eq("id", address.id)
           .eq("user_id", user.id)
-          .neq("id", address.id);
-        if (resetError) {
-          console.error("Failed to reset default addresses", resetError);
+          .select("id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, is_default")
+          .single();
+
+        if (error) {
+          console.error(error);
+          console.error(error?.message);
+          console.error(error?.details);
+          return null;
+        }
+
+        if (data) {
+          savedAddress = {
+            id: data.id,
+            label: data.label,
+            recipient: data.recipient,
+            phone: data.phone,
+            line1: data.line1,
+            line2: data.line2,
+            city: data.city,
+            region: data.region,
+            postalCode: data.postal_code,
+            country: data.country,
+            deliveryNotes: data.delivery_notes,
+            isDefault: data.is_default ?? false,
+          };
+        }
+      } else {
+        const { error, data } = await supabase
+          .from("addresses")
+          .insert(payload)
+          .select("id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, is_default")
+          .single();
+
+        if (error) {
+          console.error(error);
+          console.error(error?.message);
+          console.error(error?.details);
+          return null;
+        }
+
+        if (data) {
+          savedAddress = {
+            id: data.id,
+            label: data.label,
+            recipient: data.recipient,
+            phone: data.phone,
+            line1: data.line1,
+            line2: data.line2,
+            city: data.city,
+            region: data.region,
+            postalCode: data.postal_code,
+            country: data.country,
+            deliveryNotes: data.delivery_notes,
+            isDefault: data.is_default ?? false,
+          };
         }
       }
 
-      const { error } = await supabase.from("addresses").upsert({
-        id: address.id,
-        user_id: user.id,
-        label: address.label,
-        recipient: address.recipient,
-        phone: address.phone,
-        line1: address.line1,
-        line2: address.line2,
-        city: address.city,
-        region: address.region,
-        postal_code: address.postalCode,
-        country: address.country,
-        delivery_notes: address.deliveryNotes,
-        default: address.default ?? false,
-      });
-      if (error) {
-        console.error("Failed to persist address", error);
-      }
+      if (!savedAddress) return null;
+
+      const nextAddresses = [savedAddress, ...addresses.filter((item) => item.id !== savedAddress.id)];
+      setAddresses(nextAddresses);
+      setSelectedAddressId(savedAddress.id);
+      return savedAddress;
     } catch (err) {
-      console.error("Unexpected error persisting address", err);
+      console.error(err);
+      console.error(err instanceof Error ? err.message : "");
+      return null;
     }
   }
 
   function handleAddressSelection(address: CheckoutAddress) {
-    setSelectedAddressId(address.id);
+    setSelectedAddressId(address.id ?? null);
     setShippingAddress(address);
     setError(null);
   }
 
-  function handleNewAddress(newAddress: CheckoutAddress) {
-    setShippingAddress(newAddress);
-    setSelectedAddressId(newAddress.id);
-    setIsAddingNewAddress(false);
+  async function handleNewAddress(newAddress: CheckoutAddress) {
     setError(null);
     if (user) {
-      void persistAddressToAddressTable(newAddress);
+      const savedAddress = await persistAddressToAddressTable(newAddress);
+      if (savedAddress) {
+        setShippingAddress(savedAddress);
+        setSelectedAddressId(savedAddress.id ?? null);
+      }
+    } else {
+      setShippingAddress(newAddress);
+      setSelectedAddressId(newAddress.id ?? null);
     }
+    setIsAddingNewAddress(false);
   }
 
   function handleStartNewAddress() {

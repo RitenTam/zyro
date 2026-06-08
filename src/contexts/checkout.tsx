@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 
 export type CheckoutAddress = {
-  id: string;
+  id?: string;
   label: string;
   recipient: string;
   phone: string;
@@ -12,7 +12,7 @@ export type CheckoutAddress = {
   postalCode: string;
   country: string;
   deliveryNotes: string;
-  default?: boolean;
+  isDefault?: boolean;
 };
 
 interface CheckoutState {
