@@ -30,6 +30,7 @@ function AdminContent({ profile }: { profile: AdminProfile | null }) {
   const { user } = useAuth();
   const matchRoute = useMatchRoute();
   const isProductsPage = Boolean(matchRoute({ to: "/admin/products", fuzzy: false }));
+  const isInventoryPage = Boolean(matchRoute({ to: "/admin/inventory", fuzzy: false }));
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
@@ -42,7 +43,7 @@ function AdminContent({ profile }: { profile: AdminProfile | null }) {
         <p className="text-xs text-foreground/45">Role: {profile?.role ?? "admin"}</p>
       </header>
 
-      {!isProductsPage ? (
+      {!isProductsPage && !isInventoryPage ? (
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DashboardCard
             title="Products"
@@ -53,6 +54,8 @@ function AdminContent({ profile }: { profile: AdminProfile | null }) {
           <DashboardCard
             title="Inventory"
             description="Monitor stock levels and replenishment workflows."
+            to="/admin/inventory"
+            cta="Open inventory"
           />
           <DashboardCard
             title="Orders"

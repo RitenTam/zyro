@@ -24,6 +24,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
@@ -100,6 +101,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminInventoryRoute = AdminInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
+  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/products': typeof AdminProductsRoute
   '/products/$productId': typeof ProductsProductIdRoute
 }
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
+  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/products': typeof AdminProductsRoute
   '/products/$productId': typeof ProductsProductIdRoute
 }
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
+  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/products': typeof AdminProductsRoute
   '/products/$productId': typeof ProductsProductIdRoute
 }
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/success'
+    | '/admin/inventory'
     | '/admin/products'
     | '/products/$productId'
   fileRoutesByTo: FileRoutesByTo
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/success'
+    | '/admin/inventory'
     | '/admin/products'
     | '/products/$productId'
   id:
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/success'
+    | '/admin/inventory'
     | '/admin/products'
     | '/products/$productId'
   fileRoutesById: FileRoutesById
@@ -331,14 +343,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/inventory': {
+      id: '/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AdminInventoryRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminInventoryRoute: typeof AdminInventoryRoute
   AdminProductsRoute: typeof AdminProductsRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminInventoryRoute: AdminInventoryRoute,
   AdminProductsRoute: AdminProductsRoute,
 }
 
