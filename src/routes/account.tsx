@@ -33,6 +33,19 @@ type AddressFormState = {
   deliveryNotes: string;
 };
 
+const emptyAddressForm: AddressFormState = {
+  label: "",
+  recipient: "",
+  phone: "",
+  line1: "",
+  line2: "",
+  city: "",
+  region: "",
+  postalCode: "",
+  country: "",
+  deliveryNotes: "",
+};
+
 type Address = AddressFormState & {
   id: string;
   default: boolean;

@@ -63,6 +63,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Home
           </Link>
         </div>
+        {import.meta.env.DEV ? (
+          <pre className="mt-6 max-w-xl overflow-auto whitespace-pre-wrap rounded-md bg-background/30 p-4 text-xs text-foreground/60">
+            {error.stack}
+          </pre>
+        ) : null}
       </div>
     </div>
   );
