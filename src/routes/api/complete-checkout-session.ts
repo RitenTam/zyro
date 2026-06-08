@@ -64,13 +64,22 @@ export async function onRequestPost({ request, env }: { request: Request; env?: 
       delivery_notes: metadata.address_delivery_notes,
     };
 
+    // Generate unique order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    // Extract customer name from shipping address
+    const customerName = shippingAddress.recipient || session.customer_details?.name || "Guest";
+
     // Build order payload with address information
     const order = {
       id: session.id,
+      order_number: orderNumber,
       customer_email: session.customer_details?.email ?? null,
+      customer_name: customerName,
       amount_total: session.amount_total ?? null,
       currency: session.currency ?? null,
       payment_status: session.payment_status ?? null,
+      status: "pending",
       line_items: JSON.stringify(lineItems?.data ?? []),
       raw_session: JSON.stringify(session),
       shipping_address: JSON.stringify(shippingAddress),
