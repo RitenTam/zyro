@@ -3,6 +3,23 @@
 // - STRIPE_SECRET
 // - SUPABASE_URL
 // - SUPABASE_SERVICE_KEY (Service Role key)
+//
+// The Stripe session metadata contains customer address information that
+// was provided during checkout. This address is extracted and stored with
+// the order record for fulfillment purposes.
+
+type ShippingAddress = {
+  label?: string;
+  recipient?: string;
+  phone?: string;
+  line1?: string;
+  line2?: string;
+  city?: string;
+  region?: string;
+  postal_code?: string;
+  country?: string;
+  delivery_notes?: string;
+};
 
 export async function onRequestPost({ request, env }: { request: Request; env?: any }) {
   const body = await request.json().catch(() => ({}));
@@ -32,7 +49,22 @@ export async function onRequestPost({ request, env }: { request: Request; env?: 
     });
     const lineItems = await liRes.json();
 
-    // Build order payload
+    // Extract shipping address from session metadata
+    const metadata = session.metadata || {};
+    const shippingAddress: ShippingAddress = {
+      label: metadata.address_label,
+      recipient: metadata.address_recipient,
+      phone: metadata.address_phone,
+      line1: metadata.address_line1,
+      line2: metadata.address_line2,
+      city: metadata.address_city,
+      region: metadata.address_region,
+      postal_code: metadata.address_postal_code,
+      country: metadata.address_country,
+      delivery_notes: metadata.address_delivery_notes,
+    };
+
+    // Build order payload with address information
     const order = {
       id: session.id,
       customer_email: session.customer_details?.email ?? null,
@@ -41,6 +73,7 @@ export async function onRequestPost({ request, env }: { request: Request; env?: 
       payment_status: session.payment_status ?? null,
       line_items: JSON.stringify(lineItems?.data ?? []),
       raw_session: JSON.stringify(session),
+      shipping_address: JSON.stringify(shippingAddress),
     };
 
     // Insert into Supabase using REST API

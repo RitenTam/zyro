@@ -2,6 +2,26 @@
 // Stripe REST API. Expects a `STRIPE_SECRET` environment variable to be set
 // in the deployment environment. This function works in Cloudflare Pages
 // Functions / Workers and Node environments (it detects env sources).
+//
+// Request body:
+// {
+//   items: Array<{ productId, price, qty, name, currency?, variantId?, image?, color? }>,
+//   address?: { recipient, line1, line2, city, region, postalCode, country, phone }
+// }
+
+type CheckoutAddress = {
+  id: string;
+  label: string;
+  recipient: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
+  deliveryNotes: string;
+};
 
 export async function onRequestPost({ request, env }: { request: Request; env?: any }) {
   const body = await request.json().catch(() => ({}));
@@ -20,6 +40,11 @@ export async function onRequestPost({ request, env }: { request: Request; env?: 
     return new Response(JSON.stringify({ message: "No items provided" }), { status: 400, headers: { "content-type": "application/json" } });
   }
 
+  const address = body.address as CheckoutAddress | undefined;
+  if (!address) {
+    return new Response(JSON.stringify({ message: "Shipping address required" }), { status: 400, headers: { "content-type": "application/json" } });
+  }
+
   const params = new URLSearchParams();
 
   items.forEach((item: any, idx: number) => {
@@ -30,13 +55,32 @@ export async function onRequestPost({ request, env }: { request: Request; env?: 
     params.append(`line_items[${idx}][quantity]`, String(Number(item.qty || 1)));
   });
 
+  // Add shipping address to the session
+  params.append("shipping_address_collection[allowed_countries][]", address.country.toUpperCase());
+  params.append("billing_address_collection", "required");
+
+  // Pre-fill customer information
+  params.append("customer_email", body.customerEmail || "");
+  
+  // Store address as custom field in metadata
+  params.append("metadata[address_label]", address.label);
+  params.append("metadata[address_recipient]", address.recipient);
+  params.append("metadata[address_phone]", address.phone);
+  params.append("metadata[address_line1]", address.line1);
+  params.append("metadata[address_line2]", address.line2);
+  params.append("metadata[address_city]", address.city);
+  params.append("metadata[address_region]", address.region);
+  params.append("metadata[address_postal_code]", address.postalCode);
+  params.append("metadata[address_country]", address.country);
+  params.append("metadata[address_delivery_notes]", address.deliveryNotes);
+
   params.append("mode", "payment");
 
   const origin = request.headers.get("origin") || (() => {
     try { return new URL(request.url).origin; } catch { return null; }
   })();
   const successUrl = origin ? `${origin}/success?session_id={CHECKOUT_SESSION_ID}` : "/success";
-  const cancelUrl = origin ? `${origin}/cart` : "/cart";
+  const cancelUrl = origin ? `${origin}/checkout` : "/checkout";
 
   params.append("success_url", successUrl);
   params.append("cancel_url", cancelUrl);

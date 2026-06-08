@@ -540,19 +540,4 @@ function getInitials(name: string, email: string) {
     .toUpperCase();
 }
 
-function emptyAddressForm(): AddressFormState {
-  return {
-    label: "",
-    recipient: "",
-    phone: "",
-    line1: "",
-    line2: "",
-    city: "",
-    region: "",
-    postalCode: "",
-    country: "",
-    deliveryNotes: "",
-  };
-}
-
 export default Route;
