@@ -108,7 +108,11 @@ export async function fetchOrderById(orderId: string) {
     throw new Error("Order not found.");
   }
 
-  return normalizeAdminOrderRow(data as Record<string, unknown>);
+  const normalizedOrder = normalizeAdminOrderRow(data as Record<string, unknown>);
+  if (!normalizedOrder) {
+    throw new Error("Failed to process the order data.");
+  }
+  return normalizedOrder;
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
@@ -131,7 +135,11 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     throw new Error("Order could not be updated.");
   }
 
-  return normalizeAdminOrderRow(data as Record<string, unknown>);
+  const normalizedOrder = normalizeAdminOrderRow(data as Record<string, unknown>);
+  if (!normalizedOrder) {
+    throw new Error("Failed to process the updated order data.");
+  }
+  return normalizedOrder;
 }
 
 function normalizeAdminOrderRow(row: Record<string, unknown>): AdminOrderRow | null {

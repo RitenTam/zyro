@@ -221,7 +221,7 @@ function AdminOrdersContent({ profile }: { profile: AdminProfile | null }) {
           <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
           <div>
             <p className="font-medium text-red-900">Failed to load orders</p>
-            <p className="text-sm text-red-800">{String(ordersQuery.error)}</p>
+            <p className="text-sm text-red-800">{getErrorMessage(ordersQuery.error, "An unexpected error occurred.")}</p>
           </div>
         </div>
       )}
@@ -339,4 +339,14 @@ function AdminOrdersContent({ profile }: { profile: AdminProfile | null }) {
       />
     </div>
   );
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (!error) return fallback;
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (typeof error === "object" && "message" in error && typeof (error as any).message === "string") {
+    return (error as any).message;
+  }
+  return fallback;
 }

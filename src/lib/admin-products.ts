@@ -110,7 +110,11 @@ export async function saveAdminProduct(values: ProductFormValues, productId?: st
       throw new Error("The product could not be updated.");
     }
 
-    return normalizeAdminProductRow(data as Record<string, unknown>);
+    const normalizedProduct = normalizeAdminProductRow(data as Record<string, unknown>);
+    if (!normalizedProduct) {
+      throw new Error("Failed to process the updated product data.");
+    }
+    return normalizedProduct;
   }
 
   const { data, error } = await supabase.from("products").insert(payload).select("*").maybeSingle();
@@ -123,7 +127,11 @@ export async function saveAdminProduct(values: ProductFormValues, productId?: st
     throw new Error("The product could not be created.");
   }
 
-  return normalizeAdminProductRow(data as Record<string, unknown>);
+  const normalizedProduct = normalizeAdminProductRow(data as Record<string, unknown>);
+  if (!normalizedProduct) {
+    throw new Error("Failed to process the created product data.");
+  }
+  return normalizedProduct;
 }
 
 export async function deleteAdminProduct(productId: string) {
