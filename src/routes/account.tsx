@@ -147,7 +147,7 @@ function AccountContent() {
     setProfileForm({ fullName: displayName, email });
   }, [displayName, email]);
 
-  // Load persisted addresses for authenticated users from the `profiles` table.
+  // Load persisted addresses for authenticated users from the `addresses` table.
   useEffect(() => {
     let mounted = true;
 
@@ -156,16 +156,40 @@ function AccountContent() {
 
       try {
         const supabase = getSupabaseClient();
-        const { data, error } = await supabase.from("profiles").select("addresses").eq("id", user.id).maybeSingle();
+        const { data, error } = await supabase
+          .from("addresses")
+          .select(
+            "id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, default"
+          )
+          .eq("user_id", user.id)
+          .order("default", { ascending: false })
+          .order("created_at", { ascending: false });
+
         if (error) {
-          console.error("Failed to load addresses for profile", { error });
+          console.error("Failed to load addresses", { error });
           return;
         }
 
         if (!mounted) return;
 
-        const loaded: Address[] = (data && (data as any).addresses) || [];
-        setAddresses(Array.isArray(loaded) ? loaded : []);
+        const loaded = Array.isArray(data)
+          ? data.map((row) => ({
+              id: row.id,
+              label: row.label,
+              recipient: row.recipient,
+              phone: row.phone,
+              line1: row.line1,
+              line2: row.line2,
+              city: row.city,
+              region: row.region,
+              postalCode: row.postal_code,
+              country: row.country,
+              deliveryNotes: row.delivery_notes,
+              default: row.default ?? false,
+            }))
+          : [];
+
+        setAddresses(loaded);
       } catch (err) {
         console.error("Unexpected error while loading addresses", err);
       }
@@ -247,61 +271,121 @@ function AccountContent() {
     setAddressForm(emptyAddressForm);
   }
 
-  function handleAddressSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleAddressSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!user || !isSupabaseConfigured()) return;
+
+    const isEdit = Boolean(editingAddressId);
     const normalized: Address = {
       ...addressForm,
       id: addressForm.id ?? `address-${Date.now()}`,
-      default: editingAddressId ? addresses.some((address) => address.id === editingAddressId && address.default) : addresses.length === 0,
+      default: isEdit
+        ? addresses.some((address) => address.id === editingAddressId && address.default)
+        : addresses.length === 0,
     };
 
-    let next: Address[];
-
-    if (editingAddressId) {
-      next = addresses.map((address) => (address.id === editingAddressId ? { ...normalized, default: address.default } : address));
-    } else {
-      const shouldDefault = addresses.length === 0;
-      next = [{ ...normalized, default: shouldDefault }, ...addresses.map((address) => ({ ...address, default: address.default }))];
-    }
+    const next = isEdit
+      ? addresses.map((address) => (address.id === editingAddressId ? { ...normalized, default: address.default } : address))
+      : [{ ...normalized, default: addresses.length === 0 }, ...addresses];
 
     setAddresses(next);
-    void persistAddresses(next);
+    await persistAddress(normalized, isEdit);
 
     clearAddressForm();
   }
 
-  function removeAddress(addressId: string) {
+  async function removeAddress(addressId: string) {
+    const isDefault = addresses.some((address) => address.id === addressId && address.default);
     const next = addresses.filter((address) => address.id !== addressId);
+
     if (next.length && !next.some((address) => address.default)) {
       next[0] = { ...next[0], default: true };
     }
 
     setAddresses(next);
-    void persistAddresses(next);
-
     if (editingAddressId === addressId) {
       clearAddressForm();
+    }
+
+    if (!user || !isSupabaseConfigured()) return;
+
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.from("addresses").delete().eq("id", addressId).eq("user_id", user.id);
+      if (error) {
+        console.error("Failed to delete address", { error });
+      } else if (isDefault && next.length) {
+        await persistSetDefaultAddress(next[0].id);
+      }
+    } catch (err) {
+      console.error("Unexpected error removing address", err);
     }
   }
 
   function setDefaultAddress(addressId: string) {
     const next = addresses.map((address) => ({ ...address, default: address.id === addressId }));
     setAddresses(next);
-    void persistAddresses(next);
+    void persistSetDefaultAddress(addressId);
   }
 
-  async function persistAddresses(next: Address[]) {
+  async function persistAddress(address: Address, isEdit: boolean) {
+    if (!user || !isSupabaseConfigured()) return;
+
+    const payload = {
+      id: address.id,
+      user_id: user.id,
+      label: address.label,
+      recipient: address.recipient,
+      phone: address.phone,
+      line1: address.line1,
+      line2: address.line2,
+      city: address.city,
+      region: address.region,
+      postal_code: address.postalCode,
+      country: address.country,
+      delivery_notes: address.deliveryNotes,
+      default: address.default,
+    };
+
+    try {
+      const supabase = getSupabaseClient();
+
+      if (address.default) {
+        const { error: resetError } = await supabase.from("addresses").update({ default: false }).eq("user_id", user.id).neq("id", address.id);
+        if (resetError) {
+          console.error("Failed to reset default addresses", { error: resetError });
+        }
+      }
+
+      const query = isEdit
+        ? supabase.from("addresses").update(payload).eq("id", address.id).eq("user_id", user.id)
+        : supabase.from("addresses").insert(payload);
+
+      const { error } = await query;
+      if (error) {
+        console.error("Failed to persist address", { error });
+      }
+    } catch (err) {
+      console.error("Unexpected error persisting address", err);
+    }
+  }
+
+  async function persistSetDefaultAddress(addressId: string) {
     if (!user || !isSupabaseConfigured()) return;
 
     try {
       const supabase = getSupabaseClient();
-      // upsert will create the profile row if it doesn't exist yet.
-      const { error } = await supabase.from("profiles").upsert({ id: user.id, addresses: next });
-      if (error) {
-        console.error("Failed to persist addresses to profile", { error });
+      const { error: resetError } = await supabase.from("addresses").update({ default: false }).eq("user_id", user.id);
+      if (resetError) {
+        console.error("Failed to reset default addresses", { error: resetError });
+      }
+
+      const { error: setError } = await supabase.from("addresses").update({ default: true }).eq("id", addressId).eq("user_id", user.id);
+      if (setError) {
+        console.error("Failed to set default address", { error: setError });
       }
     } catch (err) {
-      console.error("Unexpected error persisting addresses", err);
+      console.error("Unexpected error setting default address", err);
     }
   }
 

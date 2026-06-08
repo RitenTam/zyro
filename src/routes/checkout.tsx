@@ -51,10 +51,13 @@ function CheckoutContent() {
       try {
         const supabase = getSupabaseClient();
         const { data, error: err } = await supabase
-          .from("profiles")
-          .select("addresses")
-          .eq("id", user.id)
-          .maybeSingle();
+          .from("addresses")
+          .select(
+            "id, label, recipient, phone, line1, line2, city, region, postal_code, country, delivery_notes, default"
+          )
+          .eq("user_id", user.id)
+          .order("default", { ascending: false })
+          .order("created_at", { ascending: false });
 
         if (!mounted) return;
 
@@ -65,10 +68,25 @@ function CheckoutContent() {
           return;
         }
 
-        const loaded = Array.isArray(data?.addresses) ? (data.addresses as CheckoutAddress[]) : [];
+        const loaded = Array.isArray(data)
+          ? data.map((row) => ({
+              id: row.id,
+              label: row.label,
+              recipient: row.recipient,
+              phone: row.phone,
+              line1: row.line1,
+              line2: row.line2,
+              city: row.city,
+              region: row.region,
+              postalCode: row.postal_code,
+              country: row.country,
+              deliveryNotes: row.delivery_notes,
+              default: row.default ?? false,
+            }))
+          : [];
         setAddresses(loaded);
 
-        const defaultAddress = loaded.find((address) => (address as any).default);
+        const defaultAddress = loaded.find((address) => address.default);
         const initialAddress = defaultAddress || loaded[0] || null;
 
         if (initialAddress) {
@@ -93,7 +111,7 @@ function CheckoutContent() {
     };
   }, [user]);
 
-  async function persistAddressToProfile(address: CheckoutAddress) {
+  async function persistAddressToAddressTable(address: CheckoutAddress) {
     if (!user || !isSupabaseConfigured()) return;
 
     try {
@@ -102,9 +120,38 @@ function CheckoutContent() {
       setAddresses(nextAddresses);
       setSelectedAddressId(address.id);
 
-      const { error } = await supabase.from("profiles").upsert({ id: user.id, addresses: nextAddresses });
+      if (nextAddresses.length === 1) {
+        address.default = true;
+      }
+
+      if (address.default) {
+        const { error: resetError } = await supabase
+          .from("addresses")
+          .update({ default: false })
+          .eq("user_id", user.id)
+          .neq("id", address.id);
+        if (resetError) {
+          console.error("Failed to reset default addresses", resetError);
+        }
+      }
+
+      const { error } = await supabase.from("addresses").upsert({
+        id: address.id,
+        user_id: user.id,
+        label: address.label,
+        recipient: address.recipient,
+        phone: address.phone,
+        line1: address.line1,
+        line2: address.line2,
+        city: address.city,
+        region: address.region,
+        postal_code: address.postalCode,
+        country: address.country,
+        delivery_notes: address.deliveryNotes,
+        default: address.default ?? false,
+      });
       if (error) {
-        console.error("Failed to persist address to profile", error);
+        console.error("Failed to persist address", error);
       }
     } catch (err) {
       console.error("Unexpected error persisting address", err);
@@ -123,7 +170,7 @@ function CheckoutContent() {
     setIsAddingNewAddress(false);
     setError(null);
     if (user) {
-      void persistAddressToProfile(newAddress);
+      void persistAddressToAddressTable(newAddress);
     }
   }
 

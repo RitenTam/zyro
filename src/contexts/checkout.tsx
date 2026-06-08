@@ -12,6 +12,7 @@ export type CheckoutAddress = {
   postalCode: string;
   country: string;
   deliveryNotes: string;
+  default?: boolean;
 };
 
 interface CheckoutState {
