@@ -47,11 +47,11 @@ function CartPage() {
           </div>
 
           <p className="text-sm text-foreground/60">
-            Payment options are coming soon. For now, continue browsing or keep building the cart.
+            Ready to complete your order? Use checkout to enter shipping details and place your order with cash on delivery.
           </p>
 
           <div className="flex gap-3">
-            <button disabled className="btn-primary opacity-60 cursor-not-allowed">Checkout coming soon</button>
+            <Link to="/checkout" className="btn-primary">Checkout</Link>
             <Link to="/collections" className="btn-secondary">Continue shopping</Link>
           </div>
         </div>

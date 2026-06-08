@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,9 +10,11 @@ interface CheckoutAddressFormProps {
   onSubmit: (address: CheckoutAddress) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  initialAddress?: Partial<CheckoutAddress>;
+  submitLabel?: string;
 }
 
-export const emptyCheckoutAddressForm = {
+export const emptyCheckoutAddressForm: Partial<CheckoutAddress> = {
   id: "",
   label: "",
   recipient: "",
@@ -22,7 +24,7 @@ export const emptyCheckoutAddressForm = {
   city: "",
   region: "",
   postalCode: "",
-  country: "",
+  country: "Nepal",
   deliveryNotes: "",
 };
 
@@ -30,9 +32,15 @@ export function CheckoutAddressForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  initialAddress,
+  submitLabel = "Use this address",
 }: CheckoutAddressFormProps) {
-  const [form, setForm] = useState<Partial<CheckoutAddress>>(emptyCheckoutAddressForm);
+  const [form, setForm] = useState<Partial<CheckoutAddress>>({ ...emptyCheckoutAddressForm, ...initialAddress });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setForm({ ...emptyCheckoutAddressForm, ...initialAddress });
+  }, [initialAddress]);
 
   function validateForm(): boolean {
     const newErrors: Record<string, string> = {};
@@ -56,17 +64,17 @@ export function CheckoutAddressForm({
     if (!validateForm()) return;
 
     const newAddress: CheckoutAddress = {
-      id: `address-${Date.now()}`,
-      label: form.label || "",
-      recipient: form.recipient || "",
-      phone: form.phone || "",
-      line1: form.line1 || "",
-      line2: form.line2 || "",
-      city: form.city || "",
-      region: form.region || "",
-      postalCode: form.postalCode || "",
-      country: form.country || "",
-      deliveryNotes: form.deliveryNotes || "",
+      id: form.id?.trim() || `address-${Date.now()}`,
+      label: form.label?.trim() || "",
+      recipient: form.recipient?.trim() || "",
+      phone: form.phone?.trim() || "",
+      line1: form.line1?.trim() || "",
+      line2: form.line2?.trim() || "",
+      city: form.city?.trim() || "",
+      region: form.region?.trim() || "",
+      postalCode: form.postalCode?.trim() || "",
+      country: form.country?.trim() || "",
+      deliveryNotes: form.deliveryNotes?.trim() || "",
     };
 
     onSubmit(newAddress);
@@ -74,7 +82,6 @@ export function CheckoutAddressForm({
 
   function updateField<K extends keyof CheckoutAddress>(key: K, value: CheckoutAddress[K]) {
     setForm((current) => ({ ...current, [key]: value }));
-    // Clear error for this field when user starts typing
     if (errors[key]) {
       setErrors((current) => ({ ...current, [key]: undefined }));
     }
@@ -186,7 +193,7 @@ export function CheckoutAddressForm({
 
       <div className="flex flex-wrap gap-3 pt-4">
         <Button type="submit" disabled={isLoading} className="h-12 rounded-full px-5">
-          {isLoading ? "Saving address…" : "Use this address"}
+          {isLoading ? "Saving address…" : submitLabel}
         </Button>
         <Button
           type="button"
