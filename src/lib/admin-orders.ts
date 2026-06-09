@@ -54,16 +54,21 @@ export interface LineItem {
 
 export interface AdminOrderRow {
   id: string;
+  user_id: string;
   order_number: string;
   customer_email: string | null;
   customer_name: string | null;
-  amount_total: number | null;
+  status: OrderStatus;
+  subtotal: number;
+  shipping_cost: number;
+  total: number;
   currency: string | null;
   payment_status: string | null;
-  status: OrderStatus;
-  line_items: LineItem[];
-  raw_session?: Record<string, any>;
+  payment_intent_id: string | null;
   shipping_address: ShippingAddress;
+  line_items: LineItem[];
+  raw_session: Record<string, any>;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -81,6 +86,7 @@ export async function fetchAdminOrders() {
     .order("created_at", { ascending: false });
 
   if (error) {
+    console.error("[admin-orders] fetchAdminOrders error:", error);
     throw new Error(error.message);
   }
 
@@ -101,6 +107,7 @@ export async function fetchOrderById(orderId: string) {
     .maybeSingle();
 
   if (error) {
+    console.error("[admin-orders] fetchOrderById error:", error);
     throw new Error(error.message);
   }
 
@@ -128,6 +135,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     .maybeSingle();
 
   if (error) {
+    console.error("[admin-orders] updateOrderStatus error:", error);
     throw new Error(error.message);
   }
 
@@ -162,20 +170,27 @@ function normalizeAdminOrderRow(row: Record<string, unknown>): AdminOrderRow | n
 
     const rawSession = typeof row.raw_session === "string"
       ? JSON.parse(row.raw_session)
-      : row.raw_session || {};
+      : (typeof row.raw_session === "object" && row.raw_session !== null)
+        ? (row.raw_session as Record<string, any>)
+        : {};
 
     return {
       id: String(row.id),
+      user_id: String(row.user_id),
       order_number: String(row.order_number),
       customer_email: row.customer_email ? String(row.customer_email) : null,
       customer_name: row.customer_name ? String(row.customer_name) : null,
-      amount_total: row.amount_total ? Number(row.amount_total) : null,
+      status: (row.status as OrderStatus) || "pending",
+      subtotal: typeof row.subtotal === "number" ? row.subtotal : Number(row.subtotal ?? 0),
+      shipping_cost: typeof row.shipping_cost === "number" ? row.shipping_cost : Number(row.shipping_cost ?? 0),
+      total: typeof row.total === "number" ? row.total : Number(row.total ?? 0),
       currency: row.currency ? String(row.currency) : null,
       payment_status: row.payment_status ? String(row.payment_status) : null,
-      status: (row.status as OrderStatus) || "pending",
+      payment_intent_id: row.payment_intent_id ? String(row.payment_intent_id) : null,
+      shipping_address: shippingAddress,
       line_items: lineItems,
       raw_session: rawSession,
-      shipping_address: shippingAddress,
+      notes: row.notes ? String(row.notes) : null,
       created_at: row.created_at ? String(row.created_at) : new Date().toISOString(),
       updated_at: row.updated_at ? String(row.updated_at) : new Date().toISOString(),
     };

@@ -149,7 +149,7 @@ export function OrderDetailsModal({ order, isOpen, onClose, onOrderUpdated }: Or
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-foreground/60">Order Total:</span>
-                <span className="font-medium">{formatCurrency(order.amount_total, order.currency)}</span>
+                <span className="font-medium">{formatCurrency(order.total, order.currency)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-foreground/60">Items:</span>

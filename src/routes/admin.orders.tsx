@@ -115,7 +115,7 @@ function AdminOrdersContent({ profile }: { profile: AdminProfile | null }) {
           compareValue = (a.customer_name || "").localeCompare(b.customer_name || "");
           break;
         case "amount":
-          compareValue = (a.amount_total || 0) - (b.amount_total || 0);
+          compareValue = (a.total || 0) - (b.total || 0);
           break;
         case "status":
           compareValue = a.status.localeCompare(b.status);
@@ -313,7 +313,7 @@ function AdminOrdersContent({ profile }: { profile: AdminProfile | null }) {
                     {order.order_number}
                   </td>
                   <td className="px-4 py-3 font-medium">
-                    {formatCurrency(order.amount_total, order.currency)}
+                    {formatCurrency(order.total, order.currency)}
                   </td>
                   <td className="px-4 py-3">
                     <Badge

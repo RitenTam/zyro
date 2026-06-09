@@ -56,45 +56,18 @@ type AddressInput = AddressFormState & {
   isDefault: boolean;
 };
 
-type OrderPreview = {
+type CustomerOrder = {
   id: string;
-  title: string;
-  date: string;
+  order_number: string;
   status: string;
-  total: string;
-  items: string[];
+  total: number;
+  currency: string | null;
+  created_at: string;
 };
 
 // Start with no addresses for new users. Addresses are loaded from the
 // `addresses` table when the user is authenticated.
-// Dummy/example addresses were removed so they don't appear on new accounts.
-
-const recentOrders: OrderPreview[] = [
-  {
-    id: "ZY-2418",
-    title: "Evening essentials set",
-    date: "Delivered 18 May 2026",
-    status: "Delivered",
-    total: "$248",
-    items: ["Cashmere scarf", "Leather card holder"],
-  },
-  {
-    id: "ZY-2409",
-    title: "Weekend layer refresh",
-    date: "In transit since 21 May 2026",
-    status: "In transit",
-    total: "$186",
-    items: ["Wool overshirt", "Merino tee"],
-  },
-  {
-    id: "ZY-2394",
-    title: "Signature gift order",
-    date: "Prepared 14 May 2026",
-    status: "Preparing",
-    total: "$312",
-    items: ["Gift wrap", "Candles", "Travel set"],
-  },
-];
+// Dummy/example orders were removed so account orders load from Supabase.
 
 function AccountPage() {
   const { ready, user, role, roleReady } = useAuth();
@@ -147,10 +120,79 @@ function AccountContent() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [addressForm, setAddressForm] = useState<AddressFormState>(emptyAddressForm);
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
 
   useEffect(() => {
     setProfileForm({ fullName: displayName, email });
   }, [displayName, email]);
+
+  // Load customer orders from Supabase for the authenticated user.
+  useEffect(() => {
+    let mounted = true;
+    async function loadOrders() {
+      if (!user || !isSupabaseConfigured()) {
+        if (mounted) {
+          setCustomerOrders([]);
+          setOrdersLoading(false);
+        }
+        return;
+      }
+
+      setOrdersLoading(true);
+      setOrdersError(null);
+
+      try {
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("[customer-orders] Supabase error:", error);
+          if (mounted) {
+            setOrdersError(error.message ?? "Failed to load orders.");
+            setCustomerOrders([]);
+          }
+          return;
+        }
+
+        if (!mounted) return;
+
+        const loadedOrders = Array.isArray(data)
+          ? data.map((row) => ({
+              id: String(row.id),
+              order_number: String(row.order_number),
+              status: row.status ? String(row.status) : "pending",
+              total: typeof row.total === "number" ? row.total : Number(row.total ?? 0),
+              currency: row.currency ? String(row.currency) : "USD",
+              created_at: String(row.created_at ?? new Date().toISOString()),
+            }))
+          : [];
+
+        setCustomerOrders(loadedOrders);
+      } catch (error) {
+        console.error("[customer-orders] Unexpected error:", error);
+        if (mounted) {
+          setOrdersError(error instanceof Error ? error.message : "Failed to load orders.");
+          setCustomerOrders([]);
+        }
+      } finally {
+        if (mounted) {
+          setOrdersLoading(false);
+        }
+      }
+    }
+
+    void loadOrders();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   // Load persisted addresses for authenticated users from the `addresses` table.
   useEffect(() => {
@@ -658,20 +700,36 @@ function AccountContent() {
 
         <section id="orders" className="space-y-4 border-t border-white/8 pt-6 sm:pt-8">
           <h2 className="text-sm uppercase tracking-[0.3em] text-foreground/35">Orders</h2>
-          <div className="space-y-3">
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-start sm:justify-between">
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-foreground/86">{order.title}</div>
-                  <div className="text-sm text-foreground/48">{order.date}</div>
+
+          {ordersLoading ? (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-sm text-foreground/60">
+              Loading your orders…
+            </div>
+          ) : ordersError ? (
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+              <p className="font-medium">Unable to load orders</p>
+              <p>{ordersError}</p>
+            </div>
+          ) : customerOrders.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-foreground/60">
+              You have no orders yet. Orders will appear here once they are created.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {customerOrders.map((order) => (
+                <div key={order.id} className="flex flex-col gap-2 rounded-3xl border border-white/10 bg-white/[0.03] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-foreground/86">Order {order.order_number}</div>
+                    <div className="text-sm text-foreground/48">{formatOrderDate(order.created_at)}</div>
+                  </div>
+                  <div className="space-y-1 text-sm text-foreground/52 sm:text-right">
+                    <div>{order.status}</div>
+                    <div>{formatCurrency(order.total, order.currency)}</div>
+                  </div>
                 </div>
-                <div className="text-sm text-foreground/52 sm:text-right">
-                  <div>{order.status}</div>
-                  <div>{order.total}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
@@ -717,6 +775,27 @@ function getInitials(name: string, email: string) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+function formatOrderDate(dateString: string) {
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+function formatCurrency(cents: number | null, currency: string | null = "USD") {
+  if (cents === null || Number.isNaN(cents)) return "—";
+  const value = cents / 100;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: (currency || "USD").toUpperCase(),
+  }).format(value);
 }
 
 export default Route;
