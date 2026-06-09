@@ -25,6 +25,7 @@ import {
   formatOrderDateTime,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
+  updateOrderStatus,
   type AdminOrderRow,
   type LineItem,
   type OrderStatus,
@@ -50,18 +51,11 @@ export function OrderDetailsModal({ order, isOpen, onClose, onOrderUpdated }: Or
 
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: OrderStatus) => {
-      const response = await fetch("/api/update-order-status", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ orderId: order?.id, status: newStatus }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to update order status");
-      }
-
-      return data;
+      // Use the existing updateOrderStatus function from admin-orders.ts
+      // which uses the Supabase client with the authenticated session.
+      if (!order?.id) throw new Error("Order ID is required");
+      const result = await updateOrderStatus(order.id, newStatus);
+      return result;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey });
@@ -69,6 +63,7 @@ export function OrderDetailsModal({ order, isOpen, onClose, onOrderUpdated }: Or
       onOrderUpdated?.();
     },
     onError: (error) => {
+      console.error("[admin-orders] updateStatusMutation error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to update order status.");
       setSelectedStatus(order?.status ?? "");
     },

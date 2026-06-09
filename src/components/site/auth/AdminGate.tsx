@@ -44,6 +44,19 @@ export function AdminGate({ children, nextPath = "/admin", onProfileResolved }: 
         console.info("[admin-auth] Verifying admin role from profiles table.", { userId: user.id });
 
         const supabase = getSupabaseClient();
+        try {
+          const sessionInfo = await supabase.auth.getSession();
+          console.debug('[admin-auth] supabase.auth.getSession', sessionInfo);
+        } catch (e) {
+          console.debug('[admin-auth] supabase.auth.getSession failed', e);
+        }
+        try {
+          const userInfo = await supabase.auth.getUser();
+          console.debug('[admin-auth] supabase.auth.getUser', userInfo);
+        } catch (e) {
+          console.debug('[admin-auth] supabase.auth.getUser failed', e);
+        }
+
         const { data, error } = await supabase
           .from("profiles")
           .select("id, role")

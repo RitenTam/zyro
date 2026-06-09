@@ -80,7 +80,22 @@ export async function fetchAdminOrders() {
     throw new Error("Supabase is not configured.");
   }
 
-  const { data, error } = await getSupabaseClient()
+  const supabase = getSupabaseClient();
+  try {
+    const sessionInfo = await supabase.auth.getSession();
+    console.debug("[admin-orders] auth.getSession", sessionInfo);
+  } catch (e) {
+    console.debug("[admin-orders] auth.getSession failed", e);
+  }
+
+  try {
+    const userInfo = await supabase.auth.getUser();
+    console.debug("[admin-orders] auth.getUser", userInfo);
+  } catch (e) {
+    console.debug("[admin-orders] auth.getUser failed", e);
+  }
+
+  const { data, error } = await supabase
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false });

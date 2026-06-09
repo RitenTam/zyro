@@ -81,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setSession(data.session);
+        console.debug('[auth] session loaded', { session: data.session });
         setLoading(false);
       })
       .catch((error) => {
@@ -153,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setProfile(data);
+        console.debug('[auth] profile loaded', { authenticatedUserId, profile: data });
       })
       .catch((error) => {
         if (!active) {

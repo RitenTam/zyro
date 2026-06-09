@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+console.log("[admin-orders] module imported: src/routes/admin.orders.tsx");
 import {
   useDeferredValue,
   useEffect,
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/admin/orders")({
 });
 
 function AdminOrdersPage() {
+  console.log("[admin-orders] component mounted: AdminOrdersPage");
   const [profile, setProfile] = useState<AdminProfile | null>(null);
 
   return (
@@ -69,13 +71,54 @@ function AdminOrdersPage() {
 }
 
 function AdminOrdersContent({ profile }: { profile: AdminProfile | null }) {
+  console.log("[admin-orders] component mounted: AdminOrdersContent");
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const ordersQuery = useQuery({
     queryKey: adminOrdersQueryKey,
     queryFn: fetchAdminOrders,
+    enabled: !!profile && !!user,
+    onSuccess: (data) => {
+      console.debug('[admin-orders] fetchAdminOrders onSuccess, count=', Array.isArray(data) ? data.length : 0);
+    },
+    onError: (err) => {
+      console.debug('[admin-orders] fetchAdminOrders onError', err);
+    },
+    onSettled: (data, err) => {
+      console.debug('[admin-orders] fetchAdminOrders onSettled', { dataCount: Array.isArray(data) ? data.length : data, err });
+    },
   });
+
+  useEffect(() => {
+    if (!profile || !user) {
+      console.debug('[admin-orders] fetch disabled until profile/user available', { profile, user });
+      return;
+    }
+
+    let mounted = true;
+    console.debug('[admin-orders] profile available — manually invoking fetchAdminOrders for verification');
+    fetchAdminOrders()
+      .then((data) => {
+        if (!mounted) return;
+        console.debug('[admin-orders] manual fetchAdminOrders result count=', Array.isArray(data) ? data.length : 0);
+      })
+      .catch((err) => {
+        console.debug('[admin-orders] manual fetchAdminOrders error', err);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [profile, user]);
+
+  useEffect(() => {
+    console.debug('[admin-orders] useAuth user', user);
+    console.debug('[admin-orders] resolved profile', profile);
+    console.debug('[admin-orders] ordersQuery state', { isLoading: ordersQuery.isLoading, isError: ordersQuery.isError, isFetching: ordersQuery.isFetching });
+    console.debug('[admin-orders] ordersQuery error', ordersQuery.error);
+    console.debug('[admin-orders] ordersQuery data (count)', Array.isArray(ordersQuery.data) ? ordersQuery.data.length : ordersQuery.data);
+  }, [user, profile, ordersQuery.isLoading, ordersQuery.isError, ordersQuery.isFetching, ordersQuery.error, ordersQuery.data]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
