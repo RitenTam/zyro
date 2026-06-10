@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import ResponsiveImage from "@/components/ui/responsive-image";
 import { getProductPathParam, pickBestSellerProducts, useProductsQuery } from "@/lib/products";
+import { formatPrice } from "@/lib/utils";
 
 export function BestSellers() {
   const { data: products = [], isPending, isError } = useProductsQuery();
@@ -66,7 +67,7 @@ export function BestSellers() {
                   {p.collection}
                 </p>
               </div>
-              <div className="text-sm font-medium tabular-nums">${p.price}</div>
+              <div className="text-sm font-medium tabular-nums">{formatPrice(p.price)}</div>
             </div>
             <div className="flex gap-1.5 mt-3">
               {p.colors.slice(0, 4).map((c) => (

@@ -152,7 +152,7 @@ export function OrderDetailsModal({ order, isOpen, onClose, onOrderUpdated }: Or
               </div>
               <div className="flex justify-between">
                 <span className="text-foreground/60">Currency:</span>
-                <span>{order.currency?.toUpperCase() || "USD"}</span>
+                <span>{order.currency?.toUpperCase() || "NPR"}</span>
               </div>
             </div>
           </div>

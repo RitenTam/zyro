@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/auth";
 import { useCart } from "@/contexts/cart";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { CheckoutAddress } from "@/contexts/checkout";
+import { formatPrice } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -376,9 +377,9 @@ function CheckoutContent() {
   const emptyCart = state.items.length === 0;
   const hasSavedAddresses = addresses.length > 0;
   const showAddressForm = isAddingNewAddress || !user || (!hasSavedAddresses && !isAddingNewAddress);
-  const formattedSubtotal = new Intl.NumberFormat("en-NP", { style: "currency", currency: "NPR" }).format(subtotal);
-  const formattedShipping = new Intl.NumberFormat("en-NP", { style: "currency", currency: "NPR" }).format(shippingCost);
-  const formattedTotal = new Intl.NumberFormat("en-NP", { style: "currency", currency: "NPR" }).format(total);
+  const formattedSubtotal = formatPrice(subtotal);
+  const formattedShipping = formatPrice(shippingCost);
+  const formattedTotal = formatPrice(total);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
@@ -423,7 +424,7 @@ function CheckoutContent() {
                       </div>
                     </div>
                     <div className="text-right font-medium text-foreground/80">
-                      {new Intl.NumberFormat("en-NP", { style: "currency", currency: "NPR" }).format(item.price * item.qty)}
+                      {formatPrice(item.price * item.qty)}
                     </div>
                   </div>
                 ))}

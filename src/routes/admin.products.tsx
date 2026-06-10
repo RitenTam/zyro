@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { AdminGate } from "@/components/site/auth/AdminGate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatPrice } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -339,7 +340,7 @@ function AdminProductsContent({ profile }: { profile: AdminProfile | null }) {
                       <td className="px-5 py-4">
                         <div className="space-y-1">
                           <div className="font-medium text-foreground">
-                            {formatCurrency(product.price)}
+                            {formatPrice(product.price)}
                           </div>
                           <div className="text-xs text-foreground/45">Stock: {product.stock}</div>
                         </div>
@@ -887,14 +888,6 @@ function StatusBadge({ status }: { status: ProductStatus }) {
   }
 
   return <Badge className="border-amber-500/20 bg-amber-500/10 text-amber-100">Draft</Badge>;
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-  }).format(value);
 }
 
 function getErrorMessage(error: unknown, fallback: string) {

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCart } from "@/contexts/cart";
+import { formatPrice } from "@/lib/utils";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -29,21 +30,21 @@ function CartPage() {
               <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md" />
               <div className="flex-1">
                 <div className="font-semibold">{item.name}</div>
-                <div className="text-foreground/60">${item.price.toFixed(2)}</div>
+                <div className="text-foreground/60">{formatPrice(item.price)}</div>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => updateQty(item.productId, item.variantId, Math.max(1, item.qty - 1))} className="px-3 py-1 border rounded">−</button>
                 <div className="w-8 text-center">{item.qty}</div>
                 <button onClick={() => updateQty(item.productId, item.variantId, item.qty + 1)} className="px-3 py-1 border rounded">+</button>
               </div>
-              <div className="w-24 text-right font-medium">${(item.price * item.qty).toFixed(2)}</div>
+              <div className="w-24 text-right font-medium">{formatPrice(item.price * item.qty)}</div>
               <button onClick={() => removeItem(item.productId, item.variantId)} className="text-foreground/60">Remove</button>
             </div>
           ))}
 
           <div className="border-t border-white/10 pt-4 flex justify-between items-center">
             <div className="text-lg font-semibold">Subtotal</div>
-            <div className="text-lg font-semibold">${subtotal.toFixed(2)}</div>
+            <div className="text-lg font-semibold">{formatPrice(subtotal)}</div>
           </div>
 
           <p className="text-sm text-foreground/60">

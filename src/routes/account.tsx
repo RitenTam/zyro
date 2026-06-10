@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/admin-orders";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -168,7 +169,7 @@ function AccountContent() {
               order_number: String(row.order_number),
               status: row.status ? String(row.status) : "pending",
               total: typeof row.total === "number" ? row.total : Number(row.total ?? 0),
-              currency: row.currency ? String(row.currency) : "USD",
+              currency: row.currency ? String(row.currency) : "NPR",
               created_at: String(row.created_at ?? new Date().toISOString()),
             }))
           : [];
@@ -789,13 +790,5 @@ function formatOrderDate(dateString: string) {
   }
 }
 
-function formatCurrency(cents: number | null, currency: string | null = "USD") {
-  if (cents === null || Number.isNaN(cents)) return "—";
-  const value = cents / 100;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: (currency || "USD").toUpperCase(),
-  }).format(value);
-}
 
 export default Route;

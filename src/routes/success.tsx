@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { formatCurrency } from "@/lib/admin-orders";
 
 export const Route = createFileRoute("/success")({
   head: () => ({ meta: [{ title: "Order confirmation — Zyro" }] }),
@@ -56,10 +57,9 @@ function SuccessPage() {
 
   if (status.order) {
     const order = status.order;
-    const formattedCurrency = new Intl.NumberFormat("en-NP", { style: "currency", currency: order.currency ?? "NPR" });
     const lineItems = Array.isArray(order.line_items) ? order.line_items : [];
-    const shipping = order.shipping_cost != null ? formattedCurrency.format(order.shipping_cost / 100) : "—";
-    const total = order.total != null ? formattedCurrency.format(order.total / 100) : "—";
+    const shipping = order.shipping_cost != null ? formatCurrency(order.shipping_cost, order.currency ?? "NPR") : "—";
+    const total = order.total != null ? formatCurrency(order.total, order.currency ?? "NPR") : "—";
 
     return (
       <div className="pt-24 px-6 max-w-4xl mx-auto">
@@ -96,7 +96,7 @@ function SuccessPage() {
                   <div className="mt-4 space-y-3 text-sm text-foreground/60">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>{formattedCurrency.format((order.subtotal ?? 0) / 100)}</span>
+                      <span>{formatCurrency(order.subtotal ?? 0, order.currency ?? "NPR")}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
@@ -118,7 +118,7 @@ function SuccessPage() {
                       <p className="font-medium text-foreground/90">{item.description}</p>
                       <div className="flex justify-between text-foreground/60">
                         <span>Qty {item.quantity}</span>
-                        <span>{formattedCurrency.format((item.amount_total ?? 0) / 100)}</span>
+                        <span>{formatCurrency(item.amount_total ?? 0, order.currency ?? "NPR")}</span>
                       </div>
                     </div>
                   ))}

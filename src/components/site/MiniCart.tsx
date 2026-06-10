@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useCart } from "@/contexts/cart";
 import { useEffect, useRef, useState } from "react";
+import { formatPrice } from "@/lib/utils";
 
 export function MiniCart({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { state, removeItem, updateQty, clear } = useCart();
@@ -96,7 +97,7 @@ export function MiniCart({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
               <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded-sm flex-shrink-0" />
               <div className="flex-1 text-sm">
                 <div className="font-medium text-foreground/90">{item.name}</div>
-                <div className="text-foreground/50 text-xs mt-1">${item.price.toFixed(2)}</div>
+                <div className="text-foreground/50 text-xs mt-1">{formatPrice(item.price)}</div>
                 <div className="mt-3 inline-flex items-center gap-2 border border-white/10 rounded-sm">
                   <button
                     onClick={() => updateQty(item.productId, item.variantId, Math.max(1, item.qty - 1))}
@@ -123,7 +124,7 @@ export function MiniCart({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 
           <div className="border-t border-white/5 pt-4 flex justify-between items-center">
             <div className="font-light text-foreground/80">Total</div>
-            <div className="font-medium text-[#2B7FFF]">${total.toFixed(2)}</div>
+            <div className="font-medium text-[#2B7FFF]">{formatPrice(total)}</div>
           </div>
 
           <div className="mt-4 space-y-3">

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { useCart } from "@/contexts/cart";
 import ResponsiveImage from "@/components/ui/responsive-image";
+import { formatPrice } from "@/lib/utils";
 import {
   getProductByIdentifier,
   getProductPathParam,
@@ -147,7 +148,7 @@ function ProductPage() {
             </h1>
             {product.description ? <p className="text-base text-foreground/70 mb-4 leading-relaxed">{product.description}</p> : null}
             <div className="flex items-baseline gap-4">
-              <p className="text-3xl font-bold">${selectedVariant?.price ?? product.price}</p>
+              <p className="text-3xl font-bold">{formatPrice(selectedVariant?.price ?? product.price)}</p>
               <p className="text-sm text-foreground/60">incl. VAT where applicable</p>
             </div>
             <p className="mt-3 text-sm text-foreground/55">Stock: {product.stock}</p>
@@ -223,7 +224,7 @@ function ProductPage() {
                   )}
                 </div>
                 <h3 className="font-semibold text-base">{p.name}</h3>
-                <p className="text-sm text-foreground/60 mt-1">${p.price}</p>
+                <p className="text-sm text-foreground/60 mt-1">{formatPrice(p.price)}</p>
               </Link>
             ))}
           </div>
@@ -290,7 +291,7 @@ function AddToCartButton({
         aria-label={`Add ${product.name} to cart`}
         disabled={isOut}
       >
-        {isOut ? "Unavailable" : `Add to Cart — $${price}`}
+        {isOut ? "Unavailable" : `Add to Cart — ${formatPrice(price)}`}
       </button>
     </div>
   );

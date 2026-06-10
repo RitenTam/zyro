@@ -241,10 +241,10 @@ export function formatOrderDateTime(dateString: string): string {
   }
 }
 
-export function formatCurrency(cents: number | null, currency: string = "USD"): string {
+export function formatCurrency(cents: number | null, currency: string = "NPR", locale: string = "en-NP"): string {
   if (cents === null) return "—";
   const amount = cents / 100;
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency.toUpperCase(),
   }).format(amount);
