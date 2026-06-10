@@ -101,7 +101,7 @@ export async function fetchProducts(): Promise<Product[]> {
     throw new Error("Product catalog is unavailable until Supabase is configured.");
   }
 
-  const { data, error } = await getSupabaseClient().from("products").select("*");
+  const { data, error } = await getSupabaseClient().from("products").select("*").eq("status", "active");
 
   if (error) {
     throw new Error(error.message);
