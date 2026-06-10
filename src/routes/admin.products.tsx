@@ -603,6 +603,7 @@ function ProductEditorDialog({
   onSave: (values: ProductFormValues) => Promise<void>;
 }) {
   const [form, setForm] = useState<ProductFormValues>(emptyProductForm());
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
     if (!open) {
@@ -611,6 +612,20 @@ function ProductEditorDialog({
 
     setForm(product ? productFormFromRow(product) : emptyProductForm());
   }, [open, product]);
+
+  useEffect(() => {
+    if (form.imageFile) {
+      const url = URL.createObjectURL(form.imageFile);
+      setPreviewUrl(url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    setPreviewUrl(form.image ?? "");
+    return undefined;
+  }, [form.imageFile, form.image]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -746,6 +761,33 @@ function ProductEditorDialog({
               placeholder="Short merchandising copy or a product summary."
               rows={5}
             />
+          </Field>
+
+          <Field
+            label="Product image"
+            helperText="Upload one image. Selecting a new file replaces the current image."
+          >
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0] ?? null;
+                setForm((current) => ({ ...current, imageFile: file }));
+              }}
+            />
+            {previewUrl ? (
+              <div className="mt-3 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]">
+                <img
+                  src={previewUrl}
+                  alt="Product preview"
+                  className="h-44 w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="mt-3 rounded-3xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center text-sm text-foreground/45">
+                No image selected
+              </div>
+            )}
           </Field>
 
           <div className="grid gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-2">

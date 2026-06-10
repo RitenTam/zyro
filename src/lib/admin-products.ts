@@ -16,6 +16,7 @@ export interface AdminProductRow {
   stock: number;
   sku: string;
   status: ProductStatus;
+  image?: string;
 }
 
 export interface ProductFormValues {
@@ -31,6 +32,8 @@ export interface ProductFormValues {
   stock: string;
   sku: string;
   status: ProductStatus;
+  image: string;
+  imageFile?: File | null;
 }
 
 export const adminProductsQueryKey = ["admin", "products"] as const;
@@ -49,6 +52,8 @@ export function emptyProductForm(): ProductFormValues {
     stock: "0",
     sku: "",
     status: "draft",
+    image: "",
+    imageFile: null,
   };
 }
 
@@ -66,6 +71,8 @@ export function productFormFromRow(row: AdminProductRow): ProductFormValues {
     stock: String(row.stock ?? 0),
     sku: row.sku ?? "",
     status: row.status ?? "draft",
+    image: row.image ?? "",
+    imageFile: null,
   };
 }
 
@@ -91,8 +98,12 @@ export async function saveAdminProduct(values: ProductFormValues, productId?: st
     throw new Error("Supabase is not configured.");
   }
 
-  const payload = buildAdminProductPayload(values);
   const supabase = getSupabaseClient();
+  const payload = buildAdminProductPayload(values);
+
+  if (values.imageFile) {
+    payload.image = await uploadProductImage(values.imageFile, values);
+  }
 
   if (productId) {
     const { data, error } = await supabase
@@ -171,6 +182,35 @@ function buildAdminProductPayload(values: ProductFormValues) {
   };
 }
 
+async function uploadProductImage(file: File, values: ProductFormValues) {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Only image uploads are supported.");
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("Image must be smaller than 10MB.");
+  }
+
+  const supabase = getSupabaseClient();
+  const fileName = buildProductImagePath(values, file);
+  const { error: uploadError } = await supabase.storage
+    .from("product-images")
+    .upload(fileName, file);
+
+  if (uploadError) {
+    throw new Error(uploadError.message);
+  }
+
+  const { data } = supabase.storage.from("product-images").getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+function buildProductImagePath(values: ProductFormValues, file: File) {
+  const baseName = slugify(values.slug || values.name || `product-${Date.now()}`) || `product-${Date.now()}`;
+  const extension = file.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "").toLowerCase() || "jpg";
+  return `${baseName}-${Date.now()}.${extension}`;
+}
+
 function normalizeAdminProductRow(row: Record<string, unknown>): AdminProductRow | null {
   const name = firstString(row, ["name", "title", "product_name"]);
 
@@ -187,6 +227,7 @@ function normalizeAdminProductRow(row: Record<string, unknown>): AdminProductRow
     material: firstString(row, ["material", "product_material", "type"]),
     price: firstNumber(row, ["price", "amount", "unit_price"]) ?? 0,
     description: firstString(row, ["description", "summary", "excerpt"]),
+    image: firstString(row, ["image", "image_url", "thumbnail", "hero_image"]),
     featured: firstBoolean(row, ["featured", "is_featured"]) ?? false,
     bestSeller: firstBoolean(row, ["best_seller", "bestSeller", "is_best_seller"]) ?? false,
     stock: firstNumber(row, ["stock", "inventory", "available", "quantity"]) ?? 0,
