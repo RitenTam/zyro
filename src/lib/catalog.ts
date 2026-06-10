@@ -47,8 +47,53 @@ export function productCatalogQueryOptions() {
   });
 }
 
+export const productSearchQueryKey = ["products", "search"] as const;
+
+export function productSearchQueryOptions(query: string) {
+  return queryOptions({
+    queryKey: [...productSearchQueryKey, query] as const,
+    queryFn: () => searchProducts(query),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useProductsQuery() {
   return useQuery(productCatalogQueryOptions());
+}
+
+export async function searchProducts(query: string): Promise<Product[]> {
+  const trimmed = query.trim();
+  if (trimmed.length === 0) {
+    return [];
+  }
+
+  if (!isSupabaseConfigured()) {
+    throw new Error("Product catalog is unavailable until Supabase is configured.");
+  }
+
+  const searchPattern = `%${trimmed.replace(/%/g, "\\%")}%`;
+  const { data, error } = await getSupabaseClient()
+    .from("products")
+    .select("*")
+    .eq("status", "active")
+    .or(`name.ilike.${searchPattern},description.ilike.${searchPattern}`);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const products = (data ?? [])
+    .map((row) => normalizeProductRow(row as Record<string, unknown>))
+    .filter((product): product is Product => product !== null)
+    .sort(sortProducts);
+
+  console.debug("[products] Supabase search fetch", {
+    query: trimmed,
+    total: products.length,
+    results: products.map((product) => ({ id: product.id, slug: product.slug, stock: product.stock })),
+  });
+
+  return products;
 }
 
 export async function fetchProducts(): Promise<Product[]> {

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuccessRouteImport } from './routes/success'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -40,6 +41,11 @@ const SignupRoute = SignupRouteImport.update({
 const SigninRoute = SigninRouteImport.update({
   id: '/signin',
   path: '/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollectionsRoute = CollectionsRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
+  '/search': typeof SearchRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
+  '/search': typeof SearchRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/collections': typeof CollectionsRoute
+  '/search': typeof SearchRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/success': typeof SuccessRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collections'
+    | '/search'
     | '/signin'
     | '/signup'
     | '/success'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collections'
+    | '/search'
     | '/signin'
     | '/signup'
     | '/success'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/collections'
+    | '/search'
     | '/signin'
     | '/signup'
     | '/success'
@@ -242,6 +254,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CollectionsRoute: typeof CollectionsRoute
+  SearchRoute: typeof SearchRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   SuccessRoute: typeof SuccessRoute
@@ -269,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/signin'
       fullPath: '/signin'
       preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collections': {
@@ -397,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CollectionsRoute: CollectionsRoute,
+  SearchRoute: SearchRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   SuccessRoute: SuccessRoute,

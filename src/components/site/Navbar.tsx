@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { LoaderCircle, LogOut, UserCircle2 } from "lucide-react";
 import MiniCart from "./MiniCart";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,6 +18,7 @@ export function Navbar() {
   const { state } = useCart();
   const { ready, user, signOut } = useAuth();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
   const [signingOut, setSigningOut] = useState(false);
   const count = state.items.reduce((s, i) => s + i.qty, 0);
   const displayName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? "Customer";
@@ -34,6 +35,20 @@ export function Navbar() {
   }
 
   const authHref = `/auth?next=${encodeURIComponent("/account")}`;
+
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmed = searchQuery.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+
+    router.navigate({
+      to: "/search",
+      search: { q: trimmed },
+    });
+  }
 
   return (
     <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/95 backdrop-blur-md">
@@ -60,9 +75,22 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4 text-sm">
-          <button className="hidden sm:inline text-foreground/60 hover:text-foreground transition-colors duration-200">
-            Search
-          </button>
+          <form onSubmit={handleSearchSubmit} className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+            <input
+              type="search"
+              name="q"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search products"
+              className="h-10 min-w-[12rem] bg-transparent text-sm text-foreground placeholder:text-foreground/50 outline-none"
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center rounded-full bg-[#2B7FFF] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1a64d7]"
+            >
+              Search
+            </button>
+          </form>
           <button
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}

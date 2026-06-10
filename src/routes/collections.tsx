@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
-import ResponsiveImage from "@/components/ui/responsive-image";
+import ProductCard from "@/components/site/ProductCard";
 import {
   Select,
   SelectContent,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getProductPathParam, type Product, useProductsQuery } from "@/lib/products";
+import { type Product, useProductsQuery } from "@/lib/products";
 
 export const Route = createFileRoute("/collections")({
   head: () => ({
@@ -198,41 +198,17 @@ function CollectionsPage() {
                 const deviceSummary = summarizeProductDevices(product);
 
                 return (
-                  <Link
+                  <ProductCard
                     key={product.id}
-                    to="/products/$productId"
-                    params={{ productId: getProductPathParam(product) }}
-                    className="group rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-4 transition-transform duration-300 hover:-translate-y-1 hover:border-white/10"
-                  >
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[1.4rem] bg-surface">
-                      {product.image ? (
-                        <ResponsiveImage
-                          src={product.image}
-                          alt={product.name}
-                          loading="lazy"
-                          width={800}
-                          height={1000}
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-white/[0.03] text-sm text-foreground/40">
-                          Image coming soon
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-3 px-1 pt-5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-foreground/40">
-                        {deviceSummary}
-                      </p>
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-base font-medium tracking-tight">{product.name}</h3>
-                          <p className="mt-1 text-sm text-foreground/55">{product.material}</p>
-                          <p className="mt-1 text-xs text-foreground/45">Stock: {product.stock}</p>
-                        </div>
-                        <div className="text-sm font-medium tabular-nums text-foreground/80">${product.price}</div>
-                      </div>
+                    product={product}
+                    label={deviceSummary}
+                    details={
+                      <>
+                        <p className="mt-1 text-sm text-foreground/55">{product.material}</p>
+                        <p className="mt-1 text-xs text-foreground/45">Stock: {product.stock}</p>
+                      </>
+                    }
+                    footer={
                       <div className="flex items-center gap-2 pt-1">
                         {product.colors.slice(0, 4).map((color) => (
                           <span
@@ -242,8 +218,8 @@ function CollectionsPage() {
                           />
                         ))}
                       </div>
-                    </div>
-                  </Link>
+                    }
+                  />
                 );
               })}
             </div>
