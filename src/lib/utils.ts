@@ -47,3 +47,42 @@ export function formatPrice(
     currency: currency.toUpperCase(),
   }).format(amount);
 }
+
+export function parseMaybeJson(value: unknown) {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return value;
+  }
+
+  if (
+    (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+    (trimmed.startsWith("{") && trimmed.endsWith("}"))
+  ) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return value;
+    }
+  }
+
+  return value;
+}
+
+export function toArray(value: unknown): unknown[] {
+  const parsed = parseMaybeJson(value);
+
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  return [];
+}
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}

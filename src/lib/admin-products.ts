@@ -1,4 +1,5 @@
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { isRecord, parseMaybeJson, toArray } from "@/lib/utils";
 
 export type ProductStatus = "active" | "draft";
 
@@ -22,8 +23,8 @@ export interface AdminProductRow {
   stock: number;
   sku: string;
   status: ProductStatus;
-  image?: string;
   colors: ProductColorValue[];
+  image?: string;
 }
 
 export interface ProductFormValues {
@@ -39,8 +40,8 @@ export interface ProductFormValues {
   stock: string;
   sku: string;
   status: ProductStatus;
-  image: string;
   colors: ProductColorValue[];
+  image: string;
   imageFile?: File | null;
 }
 
@@ -60,8 +61,8 @@ export function emptyProductForm(): ProductFormValues {
     stock: "0",
     sku: "",
     status: "draft",
-    image: "",
     colors: [],
+    image: "",
     imageFile: null,
   };
 }
@@ -80,8 +81,10 @@ export function productFormFromRow(row: AdminProductRow): ProductFormValues {
     stock: String(row.stock ?? 0),
     sku: row.sku ?? "",
     status: row.status ?? "draft",
+    colors: row.colors.map((color, index) => normalizeAdminProductColor(color, index)).filter(
+      (color): color is ProductColorValue => color !== null,
+    ),
     image: row.image ?? "",
-    colors: normalizeAdminProductColors(firstValue(row, ["colors", "swatches", "colorways"])),
     imageFile: null,
   };
 }
@@ -175,7 +178,6 @@ function buildAdminProductPayload(values: ProductFormValues) {
   const material = values.material.trim();
   const price = normalizeNumber(values.price);
   const stock = normalizeStock(values.stock);
-  const colors = normalizeAdminProductColorPayload(values.colors);
 
   return {
     name,
@@ -190,7 +192,8 @@ function buildAdminProductPayload(values: ProductFormValues) {
     stock,
     sku: values.sku.trim(),
     status: values.status,
-    colors,
+    colors: normalizeAdminProductColors(values.colors),
+    image: values.image.trim(),
   };
 }
 
@@ -245,59 +248,74 @@ function normalizeAdminProductRow(row: Record<string, unknown>): AdminProductRow
     stock: firstNumber(row, ["stock", "inventory", "available", "quantity"]) ?? 0,
     sku: firstString(row, ["sku", "product_sku"]),
     status: normalizeStatus(firstString(row, ["status", "product_status"])) ?? "draft",
+    colors: normalizeAdminProductColors(firstValue(row, ["colors", "swatches", "colorways"])),
   };
 }
 
-function normalizeAdminProductColors(rawValue: unknown): ProductColorValue[] {
-  return toArray(rawValue)
-    .map((value, index) => {
-      if (!isRecord(value)) {
-        return null;
-      }
+export function normalizeAdminProductColors(rawValue: unknown): ProductColorValue[] {
+  const values = toArray(rawValue);
 
-      const displayName = firstString(value, ["display_name", "displayName", "name", "label", "title"]);
-      const hexValue = firstString(value, ["hex_value", "hexValue", "hex", "value", "color"]);
+  if (values.length > 0) {
+    return values
+      .map((value, index) => normalizeAdminProductColor(value, index))
+      .filter((color): color is ProductColorValue => color !== null);
+  }
 
-      if (!displayName && !hexValue) {
-        return null;
-      }
+  if (typeof rawValue === "string") {
+    const trimmed = rawValue.trim();
 
-      return {
-        id: `color-${index + 1}`,
-        displayName,
-        hexValue,
-      } satisfies ProductColorValue;
-    })
-    .filter((color): color is ProductColorValue => color !== null)
-    .filter((color) => color.displayName.length > 0 || color.hexValue.length > 0);
+    if (!trimmed) {
+      return [];
+    }
+
+    const entries = trimmed.includes(",") ? trimmed.split(",") : [trimmed];
+
+    return entries
+      .map((value, index) => normalizeAdminProductColor(value.trim(), index))
+      .filter((color): color is ProductColorValue => color !== null);
+  }
+
+  if (isRecord(rawValue)) {
+    const color = normalizeAdminProductColor(rawValue, 0);
+    return color ? [color] : [];
+  }
+
+  return [];
 }
 
-function normalizeAdminProductColorPayload(values: ProductColorValue[]) {
-  return values
-    .map((color, index) => {
-      const displayName = color.displayName.trim();
-      const hexValue = color.hexValue.trim();
+function normalizeAdminProductColor(value: unknown, index: number): ProductColorValue | null {
+  if (typeof value === "string") {
+    const displayName = value.trim();
 
-      if (!displayName && !hexValue) {
-        return null;
-      }
+    if (!displayName) {
+      return null;
+    }
 
-      if (!displayName || !hexValue) {
-        throw new Error(`Color ${index + 1} must include both a display name and a color value.`);
-      }
+    return {
+      id: `color-${index + 1}`,
+      displayName,
+      hexValue: isValidCssColorValue(displayName) ? displayName : "",
+    };
+  }
 
-      if (!isValidCssColor(hexValue)) {
-        throw new Error(`Invalid color value for ${displayName}. Use a valid CSS color.`);
-      }
+  if (!isRecord(value)) {
+    return null;
+  }
 
-      return {
-        display_name: displayName,
-        hex_value: hexValue,
-      };
-    })
-    .filter(
-      (color): color is { display_name: string; hex_value: string } => color !== null,
-    );
+  const displayName = firstString(value, ["displayName", "display_name", "name", "label", "title"]);
+  const hexValue =
+    firstString(value, ["hexValue", "hex_value", "hex", "value", "color"]) ||
+    (displayName && isValidCssColorValue(displayName) ? displayName : "");
+
+  if (!displayName && !hexValue) {
+    return null;
+  }
+
+  return {
+    id: firstString(value, ["id", "color_id"]) || `color-${index + 1}`,
+    displayName: displayName || hexValue,
+    hexValue,
+  };
 }
 
 export function isValidCssColorValue(value: string) {
@@ -307,11 +325,14 @@ export function isValidCssColorValue(value: string) {
     return false;
   }
 
-  if (typeof CSS !== "undefined" && typeof CSS.supports === "function") {
-    return CSS.supports("color", trimmed);
+  if (typeof document === "undefined") {
+    return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmed);
   }
 
-  return /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(trimmed);
+  const probe = document.createElement("span");
+  probe.style.color = "";
+  probe.style.color = trimmed;
+  return probe.style.color !== "";
 }
 
 function normalizeStatus(value: string) {
@@ -409,27 +430,3 @@ function firstBoolean(row: Record<string, unknown>, keys: string[]) {
   return undefined;
 }
 
-function parseMaybeJson(value: unknown) {
-  if (typeof value !== "string") {
-    return value;
-  }
-
-  const trimmed = value.trim();
-
-  if (!trimmed) {
-    return value;
-  }
-
-  if (
-    (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
-    (trimmed.startsWith("{") && trimmed.endsWith("}"))
-  ) {
-    try {
-      return JSON.parse(trimmed);
-    } catch {
-      return value;
-    }
-  }
-
-  return value;
-}

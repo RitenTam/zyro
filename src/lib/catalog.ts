@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { isRecord, parseMaybeJson, toArray } from "@/lib/utils";
 
 export type ProductColor = { name: string; hex: string };
 export type ProductMaterial = string;
@@ -359,36 +360,6 @@ function firstBoolean(row: Record<string, unknown>, keys: string[]) {
   return undefined;
 }
 
-function parseMaybeJson(value: unknown) {
-  if (typeof value !== "string") {
-    return value;
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return value;
-  }
-
-  if ((trimmed.startsWith("[") && trimmed.endsWith("]")) || (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
-    try {
-      return JSON.parse(trimmed);
-    } catch {
-      return value;
-    }
-  }
-
-  return value;
-}
-
-function toArray(value: unknown): unknown[] {
-  const parsed = parseMaybeJson(value);
-  if (Array.isArray(parsed)) {
-    return parsed;
-  }
-
-  return [];
-}
-
 function toStringArray(value: unknown): string[] {
   return toArray(value)
     .map((entry) => {
@@ -399,10 +370,6 @@ function toStringArray(value: unknown): string[] {
       return "";
     })
     .filter(Boolean);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function normalizeIdentifier(value: string) {
