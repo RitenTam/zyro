@@ -49,6 +49,10 @@ export async function onRequestPost({ request, env }: { request: Request; env?: 
     });
     const lineItems = await liRes.json();
 
+    if (!liRes.ok) {
+      return new Response(JSON.stringify({ message: "Stripe error fetching line items", raw: lineItems }), { status: 502, headers: { "content-type": "application/json" } });
+    }
+
     // Extract shipping address from session metadata
     const metadata = session.metadata || {};
     const shippingAddress: ShippingAddress = {
