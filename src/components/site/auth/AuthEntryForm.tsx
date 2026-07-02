@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Apple, Chrome, LoaderCircle, Mail } from "lucide-react";
+import { Chrome, LoaderCircle, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +65,7 @@ export function AuthEntryForm({ nextPath, initialMode = "signin" }: AuthEntryFor
 
   const isBusy = pending || !clientAvailable;
 
-  async function handleSocial(provider: "google" | "apple") {
+  async function handleSocial(provider: "google") {
     setBanner(null);
     setFieldError(null);
     setPending(true);
@@ -184,26 +184,16 @@ export function AuthEntryForm({ nextPath, initialMode = "signin" }: AuthEntryFor
         <ModeButton active={mode === "signup"} onClick={() => setMode("signup")} label="Sign up" />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="flex justify-center">
         <Button
           type="button"
           variant="outline"
-          className="h-11 rounded-2xl border-white/10 bg-white/[0.025] text-sm font-medium text-foreground/78 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.05]"
+          className="h-11 w-full max-w-sm rounded-2xl border-white/10 bg-white/[0.025] text-sm font-medium text-foreground/78 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.05]"
           onClick={() => handleSocial("google")}
           disabled={isBusy}
         >
           <Chrome className="size-4" />
           Continue with Google
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 rounded-2xl border-white/10 bg-white/[0.025] text-sm font-medium text-foreground/78 transition-all duration-200 hover:border-white/18 hover:bg-white/[0.05]"
-          onClick={() => handleSocial("apple")}
-          disabled={isBusy}
-        >
-          <Apple className="size-4" />
-          Continue with Apple
         </Button>
       </div>
 

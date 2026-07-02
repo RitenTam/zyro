@@ -9,7 +9,7 @@ type AuthActionResult = {
   needsVerification?: boolean;
 };
 
-type AuthProviderName = "google" | "apple";
+type AuthProviderName = "google";
 
 type AuthProfile = {
   id: string;
