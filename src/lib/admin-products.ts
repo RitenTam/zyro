@@ -2,6 +2,12 @@ import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export type ProductStatus = "active" | "draft";
 
+export interface ProductColorValue {
+  id: string;
+  displayName: string;
+  hexValue: string;
+}
+
 export interface AdminProductRow {
   id: string;
   name: string;
@@ -17,6 +23,7 @@ export interface AdminProductRow {
   sku: string;
   status: ProductStatus;
   image?: string;
+  colors: ProductColorValue[];
 }
 
 export interface ProductFormValues {
@@ -33,6 +40,7 @@ export interface ProductFormValues {
   sku: string;
   status: ProductStatus;
   image: string;
+  colors: ProductColorValue[];
   imageFile?: File | null;
 }
 
@@ -53,6 +61,7 @@ export function emptyProductForm(): ProductFormValues {
     sku: "",
     status: "draft",
     image: "",
+    colors: [],
     imageFile: null,
   };
 }
@@ -72,6 +81,7 @@ export function productFormFromRow(row: AdminProductRow): ProductFormValues {
     sku: row.sku ?? "",
     status: row.status ?? "draft",
     image: row.image ?? "",
+    colors: normalizeAdminProductColors(firstValue(row, ["colors", "swatches", "colorways"])),
     imageFile: null,
   };
 }
@@ -165,6 +175,7 @@ function buildAdminProductPayload(values: ProductFormValues) {
   const material = values.material.trim();
   const price = normalizeNumber(values.price);
   const stock = normalizeStock(values.stock);
+  const colors = normalizeAdminProductColorPayload(values.colors);
 
   return {
     name,
@@ -179,6 +190,7 @@ function buildAdminProductPayload(values: ProductFormValues) {
     stock,
     sku: values.sku.trim(),
     status: values.status,
+    colors,
   };
 }
 
@@ -234,6 +246,72 @@ function normalizeAdminProductRow(row: Record<string, unknown>): AdminProductRow
     sku: firstString(row, ["sku", "product_sku"]),
     status: normalizeStatus(firstString(row, ["status", "product_status"])) ?? "draft",
   };
+}
+
+function normalizeAdminProductColors(rawValue: unknown): ProductColorValue[] {
+  return toArray(rawValue)
+    .map((value, index) => {
+      if (!isRecord(value)) {
+        return null;
+      }
+
+      const displayName = firstString(value, ["display_name", "displayName", "name", "label", "title"]);
+      const hexValue = firstString(value, ["hex_value", "hexValue", "hex", "value", "color"]);
+
+      if (!displayName && !hexValue) {
+        return null;
+      }
+
+      return {
+        id: `color-${index + 1}`,
+        displayName,
+        hexValue,
+      } satisfies ProductColorValue;
+    })
+    .filter((color): color is ProductColorValue => color !== null)
+    .filter((color) => color.displayName.length > 0 || color.hexValue.length > 0);
+}
+
+function normalizeAdminProductColorPayload(values: ProductColorValue[]) {
+  return values
+    .map((color, index) => {
+      const displayName = color.displayName.trim();
+      const hexValue = color.hexValue.trim();
+
+      if (!displayName && !hexValue) {
+        return null;
+      }
+
+      if (!displayName || !hexValue) {
+        throw new Error(`Color ${index + 1} must include both a display name and a color value.`);
+      }
+
+      if (!isValidCssColor(hexValue)) {
+        throw new Error(`Invalid color value for ${displayName}. Use a valid CSS color.`);
+      }
+
+      return {
+        display_name: displayName,
+        hex_value: hexValue,
+      };
+    })
+    .filter(
+      (color): color is { display_name: string; hex_value: string } => color !== null,
+    );
+}
+
+export function isValidCssColorValue(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return false;
+  }
+
+  if (typeof CSS !== "undefined" && typeof CSS.supports === "function") {
+    return CSS.supports("color", trimmed);
+  }
+
+  return /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(trimmed);
 }
 
 function normalizeStatus(value: string) {

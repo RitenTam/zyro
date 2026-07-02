@@ -101,11 +101,11 @@ function ProductErrorState({ error, reset }: { error: Error; reset: () => void }
 
 function ProductPage() {
   const { product, relatedProducts } = Route.useLoaderData() as { product: Product; relatedProducts: Product[] };
-  const [selectedColor, setSelectedColor] = useState<ProductColor | null>(product.colors[0] ?? null);
-  const [selectedVariant, setSelectedVariant] = useState<Variant | undefined>(() => selectInitialVariant(product, product.colors[0]?.name));
+  const [selectedColor, setSelectedColor] = useState<ProductColor | null>(product.colors.length === 1 ? product.colors[0] : null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | undefined>(() => selectInitialVariant(product, product.colors.length === 1 ? product.colors[0]?.name : undefined));
 
   useEffect(() => {
-    const nextColor = product.colors[0] ?? null;
+    const nextColor = product.colors.length === 1 ? product.colors[0] : null;
     setSelectedColor(nextColor);
     setSelectedVariant(selectInitialVariant(product, nextColor?.name));
   }, [product]);
@@ -157,7 +157,7 @@ function ProductPage() {
           {product.colors.length > 0 ? (
             <div>
               <h3 className="text-sm font-semibold mb-4">Color</h3>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 {product.colors.map((color) => (
                   <button
                     key={color.name}
@@ -179,6 +179,9 @@ function ProductPage() {
                     aria-pressed={selectedVariant?.options?.color === color.name}
                   />
                 ))}
+                <span className="text-sm text-foreground/60">
+                  {selectedColor?.name ?? (product.colors.length > 1 ? "Select a color" : product.colors[0]?.name ?? "")}
+                </span>
               </div>
             </div>
           ) : null}
@@ -259,6 +262,9 @@ function AddToCartButton({
 
   function handleAdd() {
     if (available <= 0) return;
+    if (product.colors.length > 1 && !selectedColor) {
+      return;
+    }
     addItem({
       productId: product.id,
       variantId: selectedVariant?.id,
@@ -266,7 +272,7 @@ function AddToCartButton({
       price,
       qty: 1,
       image: selectedVariant?.images?.[0] ?? product.image,
-      color: selectedVariant?.options?.color ?? selectedColor?.name ?? product.collection,
+      color: selectedVariant?.options?.color ?? selectedColor?.name ?? (product.colors.length === 1 ? product.colors[0]?.name : undefined),
     });
   }
 
@@ -289,9 +295,9 @@ function AddToCartButton({
         className={`btn-primary w-full ${isOut ? "opacity-50 cursor-not-allowed" : ""}`}
         onClick={handleAdd}
         aria-label={`Add ${product.name} to cart`}
-        disabled={isOut}
+        disabled={isOut || (product.colors.length > 1 && !selectedColor)}
       >
-        {isOut ? "Unavailable" : `Add to Cart — ${formatPrice(price)}`}
+        {isOut ? "Unavailable" : product.colors.length > 1 && !selectedColor ? "Select a color" : `Add to Cart — ${formatPrice(price)}`}
       </button>
     </div>
   );

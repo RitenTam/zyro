@@ -17,8 +17,8 @@ interface CartState {
 
 type Action =
   | { type: "ADD"; item: CartItem }
-  | { type: "REMOVE"; productId: string; variantId?: string }
-  | { type: "UPDATE_QTY"; productId: string; variantId?: string; qty: number }
+  | { type: "REMOVE"; productId: string; variantId?: string; color?: string }
+  | { type: "UPDATE_QTY"; productId: string; variantId?: string; color?: string; qty: number }
   | { type: "CLEAR" }
   | { type: "SET_LAST_ADDED"; item?: CartItem | null };
 
@@ -28,7 +28,10 @@ function reducer(state: CartState, action: Action): CartState {
   switch (action.type) {
     case "ADD": {
       const existingIndex = state.items.findIndex(
-        (i) => i.productId === action.item.productId && i.variantId === action.item.variantId
+        (i) =>
+          i.productId === action.item.productId &&
+          i.variantId === action.item.variantId &&
+          i.color === action.item.color,
       );
       let items = [...state.items];
       if (existingIndex > -1) {
@@ -41,13 +44,22 @@ function reducer(state: CartState, action: Action): CartState {
     }
     case "REMOVE": {
       const items = state.items.filter(
-        (i) => !(i.productId === action.productId && i.variantId === action.variantId)
+        (i) =>
+          !(
+            i.productId === action.productId &&
+            i.variantId === action.variantId &&
+            i.color === action.color
+          ),
       );
       return { ...state, items };
     }
     case "UPDATE_QTY": {
       const items = state.items.map((i) => {
-        if (i.productId === action.productId && i.variantId === action.variantId) {
+        if (
+          i.productId === action.productId &&
+          i.variantId === action.variantId &&
+          i.color === action.color
+        ) {
           return { ...i, qty: action.qty };
         }
         return i;
@@ -66,8 +78,8 @@ function reducer(state: CartState, action: Action): CartState {
 const CartContext = createContext<{
   state: CartState;
   addItem: (item: CartItem) => void;
-  removeItem: (productId: string, variantId?: string) => void;
-  updateQty: (productId: string, variantId: string | undefined, qty: number) => void;
+  removeItem: (productId: string, variantId?: string, color?: string) => void;
+  updateQty: (productId: string, variantId: string | undefined, qty: number, color?: string) => void;
   clear: () => void;
 } | null>(null);
 
@@ -102,11 +114,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addItem(item: CartItem) {
       dispatch({ type: "ADD", item });
     },
-    removeItem(productId: string, variantId?: string) {
-      dispatch({ type: "REMOVE", productId, variantId });
+    removeItem(productId: string, variantId?: string, color?: string) {
+      dispatch({ type: "REMOVE", productId, variantId, color });
     },
-    updateQty(productId: string, variantId: string | undefined, qty: number) {
-      dispatch({ type: "UPDATE_QTY", productId, variantId, qty });
+    updateQty(productId: string, variantId: string | undefined, qty: number, color?: string) {
+      dispatch({ type: "UPDATE_QTY", productId, variantId, color, qty });
     },
     clear() {
       dispatch({ type: "CLEAR" });

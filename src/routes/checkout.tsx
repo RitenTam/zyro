@@ -327,6 +327,7 @@ function CheckoutContent() {
           unit_amount: unitAmount,
           currency: "NPR",
         },
+        variant_name: item.color ?? null,
       };
     });
 
@@ -377,6 +378,7 @@ function CheckoutContent() {
         product_sku: (item as any).sku ?? null,
         variant_id: item.variantId ?? null,
         variant_name: item.color ?? null,
+        variant_color: item.color ?? null,
         quantity: item.qty,
         unit_price: Math.round(item.price * 100),
         subtotal: Math.round(item.price * 100) * item.qty,

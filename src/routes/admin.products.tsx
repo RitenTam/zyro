@@ -62,7 +62,9 @@ import {
   fetchAdminProducts,
   productFormFromRow,
   saveAdminProduct,
+  isValidCssColorValue,
   type AdminProductRow,
+  type ProductColorValue,
   type ProductFormValues,
   type ProductStatus,
 } from "@/lib/admin-products";
@@ -611,7 +613,11 @@ function ProductEditorDialog({
       return;
     }
 
-    setForm(product ? productFormFromRow(product) : emptyProductForm());
+    const nextForm = product ? productFormFromRow(product) : emptyProductForm();
+    setForm({
+      ...nextForm,
+      colors: nextForm.colors.length > 0 ? nextForm.colors : [{ id: "color-1", displayName: "", hexValue: "" }],
+    });
   }, [open, product]);
 
   useEffect(() => {
@@ -762,6 +768,95 @@ function ProductEditorDialog({
               placeholder="Short merchandising copy or a product summary."
               rows={5}
             />
+          </Field>
+
+          <Field label="Product colors" helperText="Add one or more colors. Leave the last blank row empty if the product has no colors yet.">
+            <div className="space-y-3">
+              {form.colors.map((color, index) => {
+                const isValid = color.hexValue.length > 0 && isValidCssColorValue(color.hexValue);
+                return (
+                  <div key={color.id} className="grid gap-3 rounded-3xl border border-white/8 bg-white/[0.03] p-4 md:grid-cols-[1fr_180px_auto] md:items-center">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs uppercase tracking-[0.2em] text-foreground/35">Display name</Label>
+                      <Input
+                        value={color.displayName}
+                        onChange={(event) => {
+                          const nextValue = event.target.value;
+                          setForm((current) => ({
+                            ...current,
+                            colors: current.colors.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, displayName: nextValue } : entry,
+                            ),
+                          }));
+                        }}
+                        placeholder="Black"
+                        className="h-11 rounded-2xl border-white/10 bg-white/[0.03]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs uppercase tracking-[0.2em] text-foreground/35">Hex value</Label>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 shrink-0 rounded-full border border-white/10"
+                          style={{ backgroundColor: isValid ? color.hexValue : "transparent" }}
+                        />
+                        <Input
+                          value={color.hexValue}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            setForm((current) => ({
+                              ...current,
+                              colors: current.colors.map((entry, entryIndex) =>
+                                entryIndex === index ? { ...entry, hexValue: nextValue } : entry,
+                              ),
+                            }));
+                          }}
+                          placeholder="#000000"
+                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 md:justify-end">
+                      <div className="text-xs text-foreground/45">
+                        {color.displayName && color.hexValue && isValid ? "Valid" : color.displayName || color.hexValue ? "Incomplete" : "Empty"}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full border-white/10 bg-white/[0.03] text-rose-200 hover:bg-rose-500/10 hover:text-rose-100"
+                        onClick={() => {
+                          setForm((current) => ({
+                            ...current,
+                            colors: current.colors.length > 1
+                              ? current.colors.filter((_, entryIndex) => entryIndex !== index)
+                              : [{ id: "color-1", displayName: "", hexValue: "" }],
+                          }));
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full border-white/10 bg-white/[0.03]"
+                onClick={() => {
+                  setForm((current) => ({
+                    ...current,
+                    colors: [...current.colors, { id: `color-${current.colors.length + 1}`, displayName: "", hexValue: "" }],
+                  }));
+                }}
+              >
+                Add color
+              </Button>
+            </div>
           </Field>
 
           <Field

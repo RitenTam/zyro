@@ -358,6 +358,23 @@ function AdminOrdersContent({ profile }: { profile: AdminProfile | null }) {
                   <td className="px-4 py-3 font-medium">
                     {formatCurrency(order.total, order.currency)}
                   </td>
+                    <td className="px-4 py-3 text-xs text-foreground/65">
+                      {order.line_items?.some((item) => item.variant_name) ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {order.line_items
+                            .map((item) => item.variant_name)
+                            .filter(Boolean)
+                            .slice(0, 3)
+                            .map((variantName) => (
+                              <span key={variantName} className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
+                                {variantName}
+                              </span>
+                            ))}
+                        </div>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </td>
                   <td className="px-4 py-3">
                     <Badge
                       variant="outline"

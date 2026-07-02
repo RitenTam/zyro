@@ -231,14 +231,14 @@ function normalizeColors(rawValue: unknown, variants: Variant[]): ProductColor[]
         return null;
       }
 
-      const name = firstString(value, ["name", "label", "title"]);
+      const name = firstString(value, ["display_name", "displayName", "name", "label", "title"]);
       if (!name) {
         return null;
       }
 
       return {
         name,
-        hex: firstString(value, ["hex", "value", "color"]) || colorHexFallback(name),
+        hex: firstString(value, ["hex_value", "hexValue", "hex", "value", "color"]) || colorHexFallback(name),
       } satisfies ProductColor;
     })
     .filter((color): color is ProductColor => color !== null);

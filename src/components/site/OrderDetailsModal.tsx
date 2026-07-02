@@ -170,6 +170,12 @@ export function OrderDetailsModal({ order, isOpen, onClose, onOrderUpdated }: Or
                         <p className="text-xs text-foreground/60 mt-1">
                           Qty: {item.quantity} × {formatCurrency(item.price?.unit_amount, order.currency)}
                         </p>
+                        {item.price?.metadata?.variant_color ? (
+                          <p className="text-xs text-foreground/50 mt-1">Color: {item.price.metadata.variant_color}</p>
+                        ) : null}
+                        {item.variant_name ? (
+                          <p className="text-xs text-foreground/50 mt-1">Color: {item.variant_name}</p>
+                        ) : null}
                       </div>
                       <p className="font-medium text-sm">
                         {formatCurrency(item.amount_total, order.currency)}

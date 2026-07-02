@@ -31,14 +31,15 @@ function CartPage() {
               <div className="flex-1">
                 <div className="font-semibold">{item.name}</div>
                 <div className="text-foreground/60">{formatPrice(item.price)}</div>
+                {item.color ? <div className="text-xs text-foreground/50">Color: {item.color}</div> : null}
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => updateQty(item.productId, item.variantId, Math.max(1, item.qty - 1))} className="px-3 py-1 border rounded">−</button>
+                <button onClick={() => updateQty(item.productId, item.variantId, Math.max(1, item.qty - 1), item.color)} className="px-3 py-1 border rounded">−</button>
                 <div className="w-8 text-center">{item.qty}</div>
-                <button onClick={() => updateQty(item.productId, item.variantId, item.qty + 1)} className="px-3 py-1 border rounded">+</button>
+                <button onClick={() => updateQty(item.productId, item.variantId, item.qty + 1, item.color)} className="px-3 py-1 border rounded">+</button>
               </div>
               <div className="w-24 text-right font-medium">{formatPrice(item.price * item.qty)}</div>
-              <button onClick={() => removeItem(item.productId, item.variantId)} className="text-foreground/60">Remove</button>
+              <button onClick={() => removeItem(item.productId, item.variantId, item.color)} className="text-foreground/60">Remove</button>
             </div>
           ))}
 

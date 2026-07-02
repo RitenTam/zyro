@@ -64,6 +64,7 @@ type CustomerOrder = {
   total: number;
   currency: string | null;
   created_at: string;
+  line_items?: Array<{ description?: string; variant_name?: string | null; price?: { metadata?: { variant_color?: string | null } } }>;
 };
 
 // Start with no addresses for new users. Addresses are loaded from the
@@ -171,6 +172,7 @@ function AccountContent() {
               total: typeof row.total === "number" ? row.total : Number(row.total ?? 0),
               currency: row.currency ? String(row.currency) : "NPR",
               created_at: String(row.created_at ?? new Date().toISOString()),
+              line_items: Array.isArray(row.line_items) ? row.line_items : [],
             }))
           : [];
 
@@ -726,6 +728,14 @@ function AccountContent() {
                   <div className="space-y-1 text-sm text-foreground/52 sm:text-right">
                     <div>{order.status}</div>
                     <div>{formatCurrency(order.total, order.currency)}</div>
+                    {order.line_items?.some((item) => item.variant_name || item.price?.metadata?.variant_color) ? (
+                      <div className="text-xs text-foreground/45">
+                        {order.line_items
+                          .map((item) => item.price?.metadata?.variant_color || item.variant_name)
+                          .filter(Boolean)
+                          .join(", ")}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ))}
