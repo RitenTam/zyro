@@ -237,7 +237,7 @@ export function OrderDetailsModal({ order, isOpen, onClose, onOrderUpdated }: Or
 
           {/* Order ID */}
           <div className="border rounded-lg p-4 bg-foreground/5">
-            <div className="text-xs text-foreground/60 mb-1">Stripe Session ID</div>
+            <div className="text-xs text-foreground/60 mb-1">Order ID</div>
             <p className="font-mono text-xs break-all">{order.id}</p>
           </div>
         </div>

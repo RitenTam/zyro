@@ -33,7 +33,7 @@ This document outlines a lightweight integration plan for Nepali digital wallets
 ## Data model (Supabase `orders` table)
 - id (uuid)
 - user_id (nullable)
-- provider ("khalti" | "esewa" | "imepay" | "stripe")
+- provider ("khalti" | "esewa" | "imepay")
 - provider_txn_id (text)
 - amount (numeric)
 - currency (text)

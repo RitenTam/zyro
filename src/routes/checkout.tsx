@@ -28,12 +28,27 @@ function CheckoutContent() {
   const subtotal = state.items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const shippingCost = 250;
   const total = subtotal + shippingCost;
+  const paymentMethods = [
+    {
+      id: "cash_on_delivery",
+      label: "Cash on Delivery",
+      description: "Pay when your order arrives. No card required.",
+      available: true,
+    },
+    {
+      id: "online_payment",
+      label: "Online Payment",
+      description: "Khalti and eSewa will be available soon.",
+      available: false,
+    },
+  ] as const;
 
   const [addresses, setAddresses] = useState<CheckoutAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState<CheckoutAddress | null>(null);
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(!user);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(Boolean(user));
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<(typeof paymentMethods)[number]["id"]>("cash_on_delivery");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -294,6 +309,12 @@ function CheckoutContent() {
     setError(null);
     setIsProcessing(true);
 
+    if (selectedPaymentMethod !== "cash_on_delivery") {
+      setError("Only Cash on Delivery is currently available.");
+      setIsProcessing(false);
+      return;
+    }
+
     const lineItems = state.items.map((item) => {
       const unitAmount = Math.round(item.price * 100);
       return {
@@ -319,6 +340,7 @@ function CheckoutContent() {
       shipping_cost: Math.round(shippingCost * 100),
       total: Math.round(total * 100),
       currency: "NPR",
+      payment_method: "cash_on_delivery",
       payment_status: "pending",
       shipping_address: {
         label: shippingAddress.label,
@@ -516,10 +538,51 @@ function CheckoutContent() {
 
           <div className="rounded-[1.75rem] border border-white/8 bg-white/[0.03] p-6 space-y-4">
             <div className="text-sm uppercase tracking-[0.3em] text-foreground/40">Payment</div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-4 text-sm">
-              <div className="font-medium text-foreground/90">Cash on Delivery</div>
-              <p className="text-foreground/60">Pay when your order arrives. No card required.</p>
+            <div className="space-y-3">
+              {paymentMethods.map((method) => {
+                const isSelected = selectedPaymentMethod === method.id;
+
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => {
+                      if (method.available) {
+                        setSelectedPaymentMethod(method.id);
+                        setError(null);
+                      }
+                    }}
+                    disabled={!method.available}
+                    className={`w-full rounded-3xl border p-4 text-left transition-colors ${
+                      method.available
+                        ? isSelected
+                          ? "border-white/20 bg-white/[0.08]"
+                          : "border-white/10 bg-white/[0.04] hover:bg-white/[0.06]"
+                        : "cursor-not-allowed border-white/6 bg-white/[0.02] opacity-80"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="font-medium text-foreground/90">{method.label}</div>
+                        <p className="mt-1 text-sm text-foreground/60">{method.description}</p>
+                      </div>
+                      {method.available ? (
+                        <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-foreground/50">
+                          {isSelected ? "Selected" : "Available"}
+                        </div>
+                      ) : (
+                        <div className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-foreground/40">
+                          Coming Soon
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+            <p className="text-xs leading-5 text-foreground/45">
+              Khalti and eSewa will be added later without changing the checkout layout.
+            </p>
           </div>
 
           <div className="flex flex-col gap-3">

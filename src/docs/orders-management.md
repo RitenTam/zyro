@@ -8,7 +8,7 @@ The system automatically creates orders when customers complete checkout, stores
 
 ### Features
 
-✅ **Automatic Order Creation**: Orders created immediately after successful Stripe payment
+✅ **Automatic Order Creation**: Orders created immediately after checkout submission
 ✅ **Unique Order Numbers**: Format: `ORD-{timestamp}-{randomString}`
 ✅ **Complete Order Data**: Products, quantities, prices, customer info, and shipping address
 ✅ **Status Tracking**: Pending → Processing → Shipped → Delivered or Cancelled
@@ -41,16 +41,17 @@ npm.cmd exec supabase -- migration up
 - Indices on: order_number, status, customer_email, created_at
 
 **Columns**:
-- `id` (TEXT PRIMARY KEY) - Stripe session ID
+- `id` (TEXT PRIMARY KEY) - Order ID
 - `order_number` (TEXT UNIQUE) - Human-readable order number
 - `customer_email` (TEXT) - Customer email
 - `customer_name` (TEXT) - Customer name from shipping address
 - `amount_total` (INTEGER) - Total in cents
 - `currency` (TEXT) - Currency code (e.g., "usd")
-- `payment_status` (TEXT) - Stripe payment status
+- `payment_method` (TEXT) - Payment method used at checkout
+- `payment_status` (TEXT) - Payment status for the order
 - `status` (order_status ENUM) - Order status (pending, processing, shipped, delivered, cancelled)
-- `line_items` (JSONB) - Stripe line items
-- `raw_session` (JSONB) - Full Stripe session data
+- `line_items` (JSONB) - Cart snapshot / ordered items
+- `raw_session` (JSONB) - Original checkout payload or provider metadata
 - `shipping_address` (JSONB) - Shipping address from checkout
 - `created_at` (TIMESTAMP) - Order creation date
 - `updated_at` (TIMESTAMP) - Last update date
@@ -62,7 +63,6 @@ Ensure these are set in your `.env` (already configured):
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
-STRIPE_SECRET=your_stripe_secret
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_KEY=your_service_role_key
 ```
@@ -74,17 +74,12 @@ SUPABASE_SERVICE_KEY=your_service_role_key
 ### Order Creation Flow (Automatic)
 
 1. **Checkout Initiated** → Customer selects address
-2. **Address Passed to Stripe** → Via create-checkout-session API
-3. **Stripe Payment** → Customer completes payment
-4. **Success Redirect** → Browser redirects to `/success?session_id=xxx`
-5. **Order Finalization** → complete-checkout-session API:
-   - Fetches Stripe session and line items
-   - Generates unique order number
-   - Extracts shipping address from metadata
-   - Creates order record in Supabase
-6. **Success Page** → Shows order confirmation
+2. **Cash on Delivery Selected** → Online payment is shown as coming soon
+3. **Order Created** → Checkout inserts the order directly into Supabase
+4. **Success Redirect** → Browser redirects to `/success?orderId=xxx`
+5. **Success Page** → Shows order confirmation
 
-**File**: `src/routes/api/complete-checkout-session.ts`
+**File**: `src/routes/checkout.tsx`
 
 Key Logic:
 ```typescript
@@ -169,7 +164,7 @@ Order Details Modal (on row click)
   ├─ Ordered products (with quantities & prices)
   ├─ Customer info (name, email)
   ├─ Shipping address
-  └─ Stripe session ID
+  └─ Order ID
 ```
 
 ### Admin Orders Library
@@ -345,9 +340,8 @@ Status can be changed to any other status at any time via the admin dashboard.
 ### Customer Side (Checkout)
 
 1. **Missing address** → 400 Bad Request
-2. **Stripe error** → 502 Bad Gateway with error message
-3. **Supabase error** → 502 Bad Gateway with error message
-4. **Network error** → Error message on success page
+2. **Supabase insert error** → Error message from the checkout page
+3. **Network error** → Error message on success page
 
 ### Admin Side
 
@@ -372,9 +366,9 @@ Status can be changed to any other status at any time via the admin dashboard.
 1. Customer adds products to cart
 2. Navigates to checkout (`/checkout`)
 3. Selects or creates shipping address
-4. Completes Stripe payment
-5. Redirected to `/success?session_id=cs_xxx`
-6. Order finalized and saved to Supabase:
+4. Selects Cash on Delivery and places the order
+5. Redirected to `/success?orderId=...`
+6. Order saved to Supabase:
    - Order #: `ORD-1705329600000-ABC123XYZ`
    - Status: `pending`
    - Customer: `John Doe` (from address)
@@ -406,7 +400,7 @@ Status can be changed to any other status at any time via the admin dashboard.
 2. Verify migration was run: Check for `orders` table in Supabase
 3. Check browser console for errors during checkout
 4. Verify `SUPABASE_SERVICE_KEY` is set in environment
-5. Check network tab: POST to `/api/complete-checkout-session` should return 200
+5. Check the checkout insert into `orders` in the network tab should return 200
 
 ### Status updates not saving
 
